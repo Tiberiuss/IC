@@ -1,18 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        canvas {
-            border: 1px solid black;
-        }
-    </style>
+    <title>Practica 1</title>
+    <link rel="stylesheet" href="css/index.css">
 </head>
+
 <body>
-    <canvas id="canvas"></canvas>
+    <div class="wrapper">
+        <canvas id="canvas"></canvas>
+        <div class="innerWrapper">
+            <h1>Menu</h1>
+            <div id="cellType" class="menu">
+                <button value="START">Inicio</button>
+                <button value="END">Fin</button>
+                <button value="BLOCKED">Obstaculo</button>
+            </div>
+        </div>
+        <div class="wrapperButtons">
+            <button id="start">Iniciar Simulación</button>
+            <button id="reset">Limpiar tablero</button>
+        </div>
+    </div>
+
+    <script src="Cell.js"></script>
     <script src="script.js"></script>
+
 </body>
+
 </html>
