@@ -1,5 +1,5 @@
-import { Board } from "./Board.js";
-import { cell_type_from_string } from "./Cell.js";
+//import { Board } from "./Board.js";
+//import { cell_type_from_string } from "./Cell.js";
 
 function main() {
     let board = new Board(10, 10, 50);

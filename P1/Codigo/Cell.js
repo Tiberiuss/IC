@@ -53,4 +53,4 @@ class Cell {
     }
 }
 
-export { Cell, CELL_TYPE, cell_type_from_string };
+//export { Cell, CELL_TYPE, cell_type_from_string };

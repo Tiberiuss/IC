@@ -1,4 +1,4 @@
-import { Cell, CELL_TYPE } from "./Cell.js";
+//import { Cell, CELL_TYPE } from "./Cell.js";
 
 function makeGrid(cols, rows) {
     let grid = new Array(cols);
@@ -79,4 +79,4 @@ class Board {
     }
 }
 
-export { Board };
+//export { Board };
