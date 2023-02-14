@@ -1,88 +1,31 @@
-const COLS = 10
-const ROWS = 10
-const CELLSIZE = 50;
+import { Board } from "./Board.js";
+import { cell_type_from_string } from "./Cell.js";
 
-const WIDTH = COLS * CELLSIZE
-const HEIGHT = ROWS * CELLSIZE
+function main() {
+    let board = new Board(10, 10, 50);
+    board.create();
+    board.paint();
 
-let tipo_celda = document.querySelector('#cellType')
-let start_sim = document.querySelector('#start')
-let reset_sim = document.querySelector('#reset')
-let canvas = document.querySelector('canvas')
-let ctx = canvas.getContext('2d')
-let SELECTED_CELL = CELL_TYPE.BLANK
-canvas.width = WIDTH
-canvas.height = HEIGHT
+    let btn_tipo_celda = document.querySelector("#cellType");
+    let btn_start_sim = document.querySelector("#start");
+    let btn_reset_sim = document.querySelector("#reset");
 
-tipo_celda.addEventListener('click', (e) => {
-    console.log(e.target.tagName);
-    if (e.target.tagName !== 'DIV') {
-        console.log(e.target)
-        document.querySelectorAll('.active').forEach(el => el.classList.remove('active'))
-        e.target.classList.add('active')
-        SELECTED_CELL = fromString(e.target.value)
-    }
-})
-
-start_sim.addEventListener('click', () => {
-    start()
-})
-
-reset_sim.addEventListener('click', () => {
-    reset()
-})
-
-function pintar() {
-    ctx.strokeStyle = 'white'
-    ctx.fillStyle = 'black'
-    ctx.fillRect(0, 0, WIDTH, HEIGHT)
-    for (let i = 0; i < COLS; i++) {
-        for (let j = 0; j < ROWS; j++) {
-            grid[i][j].pintar()
+    btn_tipo_celda.addEventListener("click", (e) => {
+        if (e.target.tagName !== "DIV") {
+            document.querySelectorAll(".active").forEach((el) => el.classList.remove("active"));
+            e.target.classList.add("active");
+            board.selected_cell = cell_type_from_string(e.target.value);
         }
-    }
+    });
+
+    btn_start_sim.addEventListener("click", () => {
+        board.start();
+    });
+
+    btn_reset_sim.addEventListener("click", () => {
+        board.reset();
+        board.paint();
+    });
 }
 
-
-canvas.addEventListener('click', (event) => {
-    let rect = canvas.getBoundingClientRect();
-    let mouseX = event.x - rect.left;
-    let mouseY = event.y - rect.top;
-    for (let i = 0; i < COLS; i++) {
-        for (let j = 0; j < ROWS; j++) {
-            if (grid[i][j].checkIn(mouseX, mouseY)) {
-                if (grid[i][j].type === SELECTED_CELL) {
-                    grid[i][j].type = CELL_TYPE.BLANK
-                } else {
-                    grid[i][j].type = SELECTED_CELL
-                }
-            }
-        }
-    }
-    pintar()
-})
-
-let grid = makeGrid()
-
-function makeGrid() {
-    let grid = new Array(COLS)
-    for (let i = 0; i < COLS; i++) {
-        grid[i] = new Array(ROWS)
-        for (let j = 0; j < ROWS; j++) {
-            grid[i][j] = new Cell(i * CELLSIZE, j * CELLSIZE, CELLSIZE, CELLSIZE)
-        }
-    }
-    return grid;
-}
-
-function reset() {
-    grid = makeGrid()
-    pintar()
-}
-
-function start() {
-    console.log("ALGORITMO GUAPO");
-}
-
-
-pintar()
+main();

@@ -9,16 +9,19 @@ canvas {
 
 .wrapper {
     display: grid;
-    grid-template-columns: 2;
-    grid-template-rows: 2;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
 }
 
 .innerWrapper {
+    justify-self: start;
     margin: 20px;
-    grid-column: 1/2;
 }
 
 .wrapperButtons {
+    margin-top: 30px;
+    align-self: start;
     display: inline;
 }
 
@@ -29,20 +32,16 @@ button {
     padding: 1rem 1.5rem;
     margin-bottom: 30px;
     border: 2px solid #eee;
-    border-radius: .5rem;
+    border-radius: 0.5rem;
     cursor: pointer;
     transition: all 1s ease;
-    box-shadow: .5rem .5rem 1rem #ccc,
-        -.5rem -.5rem 1rem #fff;
-
+    box-shadow: 0.5rem 0.5rem 1rem #ccc, -0.5rem -0.5rem 1rem #fff;
 }
 
 .menu {
     display: inline-flex;
     flex-direction: column;
-
 }
-
 
 .active {
     background-color: #333;

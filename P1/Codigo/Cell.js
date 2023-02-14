@@ -3,59 +3,54 @@ const CELL_TYPE = {
     START: "START",
     END: "END",
     BLOCKED: "BLOCKED",
-}
+};
 
-const fromString = (str) => {
-    switch (str) {
-        case CELL_TYPE.BLANK:
-            return CELL_TYPE.BLANK
-            break;
-        case CELL_TYPE.START:
-            return CELL_TYPE.START
-            break;
-        case CELL_TYPE.END:
-            return CELL_TYPE.END
-            break;
-        case CELL_TYPE.BLOCKED:
-            return CELL_TYPE.BLOCKED
-            break;
-        default:
-            break;
-    }
-}
+const cell_type_from_string = (str) => {
+    return CELL_TYPE?.[str] || CELL_TYPE.BLANK;
+};
 
 class Cell {
-    constructor(x, y, w) {
+    constructor(ctx, x, y, w) {
         this.x = x;
         this.y = y;
         this.w = w;
-        this.type = CELL_TYPE.BLANK
+        this.type = CELL_TYPE.BLANK;
         this.pintado = false;
+        /** @type {CanvasRenderingContext2D} */
+        this.ctx = ctx;
     }
 
-    pintar() {
-        console.log(this.type);
+    reset() {
+        this.type = CELL_TYPE.BLANK;
+    }
+
+    paint() {
+        this.ctx.beginPath();
+        this.ctx.rect(this.x, this.y, this.w, this.w);
+        this.ctx.lineWidth = 0.1
+        this.ctx.strokeStyle = "white";
         switch (this.type) {
             case CELL_TYPE.BLANK:
-                ctx.strokeStyle = 'white'
-                ctx.strokeRect(this.x, this.y, this.w, this.w)
+                this.ctx.fillStyle = "black";
                 break;
             case CELL_TYPE.START:
-                ctx.fillStyle = 'blue'
-                ctx.fillRect(this.x, this.y, this.w, this.w)
+                this.ctx.fillStyle = "blue";
                 break;
             case CELL_TYPE.END:
-                ctx.fillStyle = 'yellow'
-                ctx.fillRect(this.x, this.y, this.w, this.w)
+                this.ctx.strokeStyle = "black";
+                this.ctx.fillStyle = "yellow";
                 break;
             case CELL_TYPE.BLOCKED:
-                ctx.fillStyle = 'red'
-                ctx.fillRect(this.x, this.y, this.w, this.w)
+                this.ctx.fillStyle = "red";
                 break;
         }
+        this.ctx.fill();
+        this.ctx.stroke();
     }
 
     checkIn(x, y) {
         return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.w;
     }
 }
+
+export { Cell, CELL_TYPE, cell_type_from_string };
