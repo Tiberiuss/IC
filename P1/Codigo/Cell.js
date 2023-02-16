@@ -3,6 +3,7 @@ const CELL_TYPE = {
     START: "START",
     END: "END",
     BLOCKED: "BLOCKED",
+    PATH: "PATH"
 };
 
 const cell_type_from_string = (str) => {
@@ -10,7 +11,10 @@ const cell_type_from_string = (str) => {
 };
 
 class Cell {
-    constructor(ctx, x, y, w) {
+    constructor(ctx,i,j, x, y, w, id) {
+        this.i = i;
+        this.j = j;
+        this.id = id;
         this.x = x;
         this.y = y;
         this.w = w;
@@ -42,6 +46,9 @@ class Cell {
                 break;
             case CELL_TYPE.BLOCKED:
                 this.ctx.fillStyle = "red";
+                break;
+            case CELL_TYPE.BLOCKED:
+                this.ctx.fillStyle = "pink";
                 break;
         }
         this.ctx.fill();
