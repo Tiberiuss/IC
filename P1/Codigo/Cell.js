@@ -47,8 +47,8 @@ class Cell {
             case CELL_TYPE.BLOCKED:
                 this.ctx.fillStyle = "red";
                 break;
-            case CELL_TYPE.BLOCKED:
-                this.ctx.fillStyle = "pink";
+            case CELL_TYPE.PATH:
+                this.ctx.fillStyle = "orange";
                 break;
         }
         this.ctx.fill();

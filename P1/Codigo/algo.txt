@@ -1,0 +1,40 @@
+// TODO penalizaciones no deberian superar el 10% de la diagonal del grid.
+
+
+1.Crear un grafo G con un único nodo que contiene la descripción del problema. Crear una lista de nodos
+llamada ABIERTA e inicializarla con dicho nodo. Llamar a este elemento r y asignarle g(r) = 0
+2.Crear una lista de nodos llamada CERRADA inicialmente vacía.
+3.Hasta que se encuentre una meta o se devuelva fallo realizar las siguientes acciones:
+(3.1) Si ABIERTA está vacía terminar con fallo; en caso contrario, continuar.
+(3.2) Eliminar el nodo de ABIERTA que tenga un valor mínimo de f, llamar a este nodo m e
+introducirlo en la lista CERRADA.
+(3.3) Si m es meta, abandonar el proceso iterativo establecido en 3, devolviendo el camino de la
+solución, que se obtiene recorriendo los punteros de sus antepasados.
+(3.4) En caso contrario, expandir m generando todos sus sucesores.
+(3.5) Para cada sucesor n' de m:
+(1) Crear un puntero de n' a m.
+(2) Calcular g(n') = g(m) + c(m,n')  c(a,b): coste de pasar de a a b
+(3) Si n' está en ABIERTA, llamar n al nodo encontrado en dicha lista, añadirlo a los sucesores
+de m y realizar (3.1.).
+(3.1.) Si g(n') < g(n) entonces redireccionar el puntero de n a m y cambiar el camino
+de menor coste encontrado a n desde la raíz; g(n) = g(n') y f(n) = g(n') + h(n).
+
+
+(4) Si n' no cumple (3), comprobar si está en CERRADA, llamar n al nodo encontrado en dicha lista,
+y realizar las siguientes acciones:
+Si (3.1.) no se cumple, abandonar (4), en caso contrario propagar el nuevo menor coste
+g(n') (por lo que también se actualizarán los valores de f correspondientes) a sus
+descendientes (que llamaremos ni, i = 1, 2,..) siendo sus costes anteriores g(ni))
+realizando un recorrido en profundidad (como se ha explicado antes) de éstos,
+empezando en n´ y teniendo en cuenta las siguientes consideraciones:
+(4.1.) Para los nodos descendientes ni cuyo puntero (que debe apuntar siempre al mejor
+antecesor hasta ese momento) conduzca hacia el nodo n' actualizar g(ni) = g(ni') y f(ni) =g(ni') + h(n) 
+y seguir el recorrido hasta que se encuentre un ni que no tenga más
+sucesores calculados o se llegue a un nodo en que ya ocurra que g(ni) = g(ni'); en cuyo
+caso se habría producido un ciclo y también habría que terminar la propagación.
+(4.2.) Para los nodos descendientes ni cuyo puntero no conduzca hacia el nodo n'
+comprobar si g(ni') < g(ni) en cuyo caso se debe actualizar el puntero para que conduzca
+hacia el nodo n' (mejor camino desde la raíz encontrado hasta ese momento) y se
+continúa el proceso de propagación.
+(5) Si n' no estaba en ABIERTA o en CERRADA, calcular h(n') y f(n') = g(n') + h(n'), introducirlo en
+ABIERTA y añadirlo a la lista de sucesores de m.
