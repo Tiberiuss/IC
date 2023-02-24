@@ -26,10 +26,11 @@ class GraphNode {
 }
 
 class AStar {
-    constructor(grid, rows, cols) {
+    constructor(grid, rows, cols, user) {
         this.grid = grid;
         this.rows = rows;
         this.cols = cols;
+        this.user = user;
     }
 
     // Distancia
@@ -51,8 +52,8 @@ class AStar {
         for (const [dx, dy, dist] of this.getDirs()) {
             if (this.inBounds(nodo.i + dx, nodo.j + dy)) {
                 const celdaAdyacente = this.grid[nodo.i + dx][nodo.j + dy];
-                if (celdaAdyacente.type === CELL_TYPE.BLANK || celdaAdyacente.type === CELL_TYPE.END) {
-                    neighbours.push([celdaAdyacente,dist]);
+                if ((celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.maxHeight > celdaAdyacente.height) || (celdaAdyacente.type === CELL_TYPE.BLANK || celdaAdyacente.type === CELL_TYPE.END || celdaAdyacente.type === CELL_TYPE.WAYPOINT)) {
+                    neighbours.push([celdaAdyacente, dist]);
                 }
             }
         }
@@ -65,7 +66,9 @@ class AStar {
         const cerrada = [];
         const explored_path = []
         let nodoEnd = null;
+
         while (abierta.length !== 0) {
+            console.log(abierta.length);
             const indexRemove = abierta.reduce((prev, current, index) => (abierta[prev].f() < abierta[index].f() ? prev : index), 0);
             const [nodoMejor] = abierta.splice(indexRemove, 1);
 
@@ -74,21 +77,27 @@ class AStar {
                 break;
             };
 
+
+
             for (const [celdaAdyacente, dist] of this.getNeighbours(nodoMejor)) {
                 let new_cost = nodoMejor.g + dist;
                 let nodoCerrada = cerrada.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
-                if (!nodoCerrada){
+
+                let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
+
+
+                if (!nodoCerrada && !nodoAbierta) {
                     nodoCerrada = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor);
                     nodoCerrada.g = dist;
                     nodoCerrada.h = this.h(nodoCerrada, endNode);
                     explored_path.push([nodoCerrada.i, nodoCerrada.j]);
                     abierta.push(nodoCerrada);
                 }
-                
-                if(new_cost < celdaAdyacente.g) {
+
+                if (new_cost < celdaAdyacente.g) {
                     nodoCerrada.g = new_cost
                 }
-                
+
 
                 /* let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
                 if (nodoAbierta) {
@@ -111,14 +120,17 @@ class AStar {
                         nodoAdyacente.g = dist;
                         nodoAdyacente.h = this.h(nodoAdyacente, endNode);
                         abierta.push(nodoAdyacente);
-                    }
-                } */
+                    } 
+                   
+                }
+                */
             }
             cerrada.push(nodoMejor);
+
         }
 
         let path;
-        if(nodoEnd) {
+        if (nodoEnd) {
             // Si ha llegado al final, recuperar el camino minimo
             path = [];
             let curr = nodoEnd;
@@ -129,7 +141,7 @@ class AStar {
             path.shift();
             path.pop();
         }
-        return [path,explored_path];
+        return [path, explored_path];
 
     }
 }

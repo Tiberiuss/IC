@@ -1,32 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Practica 1</title>
-        <link rel="stylesheet" href="css/index.css" />
-    </head>
 
-    <body>
-        <div class="wrapper">
-            <canvas id="canvas"></canvas>
-            <div class="innerWrapper">
-                <h1>Menu</h1>
-                <div id="cellType" class="menu">
-                    <button value="START">Inicio</button>
-                    <button value="END">Fin</button>
-                    <button value="BLOCKED">Obstaculo</button>
-                </div>
-            </div>
-            <div class="wrapperButtons">
-                <button id="start">Iniciar Simulación</button>
-                <button id="reset">Limpiar tablero</button>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Practica 1</title>
+    <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body>
+    <div class="wrapper">
+        <canvas id="canvas"></canvas>
+        <div class="innerWrapper">
+            <h1>Menu</h1>
+            <div id="cellType" class="menu">
+                <button value="START">Inicio</button>
+                <button value="END">Fin</button>
+                <button value="BLOCKED">
+                    Obstaculo
+                    <select id="blocked_selector">
+                        <option value="250">250</option>
+                        <option value="750">750</option>
+                        <option value="1500">1500</option>
+
+                    </select>
+                </button>
+                <button value="WAYPOINT">Waypoint</button>
             </div>
         </div>
-        <script src="Cell.js"></script>
-        <script src="Algorithm.js"></script>
-        <script src="Board.js"></script>
-        <script src="script.js"></script>
-    </body>
+        <div class="wrapperButtons">
+            <button id="start">Iniciar Simulación</button>
+            <button id="reset">Limpiar tablero</button>
+        </div>
+    </div>
+    <script src="Cell.js"></script>
+    <script src="Algorithm.js"></script>
+    <script src="Board.js"></script>
+    <script src="script.js"></script>
+</body>
+
 </html>

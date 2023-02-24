@@ -4,7 +4,8 @@ const CELL_TYPE = {
     END: "END",
     BLOCKED: "BLOCKED",
     PATH: "PATH",
-    EXPLORED_PATH: "EXPLORED_PATH"
+    EXPLORED_PATH: "EXPLORED_PATH",
+    WAYPOINT: "WAYPOINT"
 };
 
 const cell_type_from_string = (str) => {
@@ -16,7 +17,7 @@ img.src = "sprite.png"
 
 
 class Cell {
-    constructor(ctx,i,j, x, y, w, id) {
+    constructor(ctx, i, j, x, y, w, id) {
         this.i = i;
         this.j = j;
         this.id = id;
@@ -25,6 +26,8 @@ class Cell {
         this.w = w;
         this.type = CELL_TYPE.BLANK;
         this.pintado = false;
+        this.height = 0;
+        this.color = null;
         /** @type {CanvasRenderingContext2D} */
         this.ctx = ctx;
     }
@@ -33,10 +36,10 @@ class Cell {
         this.type = CELL_TYPE.BLANK;
     }
 
-    paint() {
+    paint(user) {
         this.ctx.save()
         this.ctx.beginPath();
-        this.ctx.lineWidth = 0.02
+        this.ctx.lineWidth = 0.1
         this.ctx.strokeStyle = "white";
         switch (this.type) {
             case CELL_TYPE.BLANK:
@@ -64,11 +67,21 @@ class Cell {
             case CELL_TYPE.BLOCKED:
                 this.ctx.closePath()
                 this.ctx.beginPath()
-                this.ctx.drawImage(img,this.x+5, this.y+5, this.w-10, this.w-10)
-                this.ctx.fillStyle = "red";
-                this.ctx.strokeStyle = "white";
-                this.ctx.lineWidth = 2
+                let size;
+                if (this.height <= 250) {
+                    size = 10
+                } else if (this.height <= 750) {
+                    size = 5
+                } else {
+                    size = 1
+                }
+                this.ctx.fillStyle = this.color ?? "black";
                 this.ctx.rect(this.x, this.y, this.w, this.w);
+                this.ctx.fill()
+                this.ctx.drawImage(img, this.x + size, this.y + size, this.w - (2 * size), this.w - (2 * size));
+                this.ctx.strokeStyle = user.maxHeight > this.height ? "lightgreen" : "crimson";
+                this.ctx.lineWidth = 2
+
                 this.ctx.stroke()
                 break;
             case CELL_TYPE.PATH:
@@ -79,6 +92,12 @@ class Cell {
                 break;
             case CELL_TYPE.EXPLORED_PATH:
                 this.ctx.fillStyle = "gray";
+                this.ctx.rect(this.x, this.y, this.w, this.w);
+                this.ctx.fill();
+                this.ctx.stroke();
+                break;
+            case CELL_TYPE.WAYPOINT:
+                this.ctx.fillStyle = "lightblue";
                 this.ctx.rect(this.x, this.y, this.w, this.w);
                 this.ctx.fill();
                 this.ctx.stroke();
