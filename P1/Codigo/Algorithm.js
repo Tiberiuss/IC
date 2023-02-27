@@ -1,23 +1,24 @@
 const DIAG_DIST = Math.sqrt(2);
-const CARDIANL_DIST = 1;
+const CARDINAL_DIST = 1;
 const dirs = [
     [-1, -1, DIAG_DIST],
-    [-1, 0, CARDIANL_DIST],
+    [-1, 0, CARDINAL_DIST],
     [-1, 1, DIAG_DIST],
-    [0, -1, CARDIANL_DIST],
-    [0, 1, CARDIANL_DIST],
+    [0, -1, CARDINAL_DIST],
+    [0, 1, CARDINAL_DIST],
     [1, -1, DIAG_DIST],
-    [1, 0, CARDIANL_DIST],
+    [1, 0, CARDINAL_DIST],
     [1, 1, DIAG_DIST],
 ];
 
 class GraphNode {
-    constructor(i, j, g, h, parent) {
+    constructor(i, j, g, h, parent,id) {
         this.i = i;
         this.j = j;
         this.g = g; // Distancia al comienzo
         this.h = h; // Heuristica
         this.parent = parent; //Antecesor
+        this.id = id;
     }
 
     f() {
@@ -44,7 +45,7 @@ class AStar {
 
     inBounds(x, y) {
         //Comprobar que no sale del tablero
-        return x < this.rows && x >= 0 && y < this.cols && y >= 0;
+        return x < this.cols && x >= 0 && y < this.rows && y >= 0;
     }
 
     getNeighbours(nodo) {
@@ -61,42 +62,38 @@ class AStar {
     }
 
     search(startN, endNode) {
-        let startNode = new GraphNode(startN.i, startN.j, 0, this.h(startN, endNode), null);
+        let startNode = new GraphNode(startN.i, startN.j, 0, this.h(startN, endNode), null,startN.id);
         const abierta = [startNode];
-        const cerrada = [];
+        const cerrada = {};
         const explored_path = []
         let nodoEnd = null;
 
         while (abierta.length !== 0) {
-            console.log(abierta.length);
             const indexRemove = abierta.reduce((prev, current, index) => (abierta[prev].f() < abierta[index].f() ? prev : index), 0);
             const [nodoMejor] = abierta.splice(indexRemove, 1);
-
             if (nodoMejor.i === endNode.i && nodoMejor.j === endNode.j) {
                 nodoEnd = nodoMejor;
                 break;
             };
-
-
-
             for (const [celdaAdyacente, dist] of this.getNeighbours(nodoMejor)) {
                 let new_cost = nodoMejor.g + dist;
-                let nodoCerrada = cerrada.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
-
+                let nodoCerrada = cerrada[celdaAdyacente.id];
                 let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
-
-
+                let nodo = null;
                 if (!nodoCerrada && !nodoAbierta) {
-                    nodoCerrada = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor);
-                    nodoCerrada.g = dist;
-                    nodoCerrada.h = this.h(nodoCerrada, endNode);
-                    explored_path.push([nodoCerrada.i, nodoCerrada.j]);
-                    abierta.push(nodoCerrada);
+                    nodo = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor,celdaAdyacente.id);
+                    nodo.g = new_cost;
+                    nodo.h = this.h(nodo, endNode);
+                    explored_path.push([nodo.i, nodo.j]);
+                    abierta.push(nodo);
+                } else {
+                    nodo = nodoCerrada || nodoAbierta
+                    if (new_cost < nodo.g) {
+                        nodo.g = new_cost
+                        nodo.parent = nodoMejor
+                    }
                 }
 
-                if (new_cost < celdaAdyacente.g) {
-                    nodoCerrada.g = new_cost
-                }
 
 
                 /* let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
@@ -125,14 +122,12 @@ class AStar {
                 }
                 */
             }
-            cerrada.push(nodoMejor);
+            cerrada[nodoMejor.id] = nodoMejor;
 
         }
-
-        let path;
+        let path = [];
         if (nodoEnd) {
             // Si ha llegado al final, recuperar el camino minimo
-            path = [];
             let curr = nodoEnd;
             while (curr !== null) {
                 path.push([curr.i, curr.j]);
@@ -141,7 +136,7 @@ class AStar {
             path.shift();
             path.pop();
         }
-        return [path, explored_path];
+        return [path.reverse(), explored_path];
 
     }
 }
