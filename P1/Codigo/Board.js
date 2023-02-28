@@ -138,7 +138,7 @@ class Board {
                 this.ctx.font = this.cellSize/3 + 'px courier'
                 this.ctx.textAlign= 'center'
                 this.ctx.fillStyle = 'white'
-                this.ctx.fillText(i + ',' + j, this.grid[i][j].x + this.cellSize / 2, this.grid[i][j].y + this.cellSize / 2 + 10)
+                // this.ctx.fillText(i + ',' + j, this.grid[i][j].x + this.cellSize / 2, this.grid[i][j].y + this.cellSize / 2 + 10)
             }
         }
     }
@@ -157,9 +157,9 @@ class Board {
         this.waypoints.push(this.endNode)
         let first = this.startNode
         for (const last of this.waypoints) {
-            let [path, explored_path] = astar.search(first, last);
+            let [path, explored_path, solucion] = astar.search(first, last);
             fullExploredPath.push(...explored_path)
-            if (path.length === 0) break;
+            if (!solucion) break;
             fullPath.push(...path)
             fullPath.push([last.i,last.j])
             first = last

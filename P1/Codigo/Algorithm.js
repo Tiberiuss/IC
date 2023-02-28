@@ -12,7 +12,7 @@ const dirs = [
 ];
 
 class GraphNode {
-    constructor(i, j, g, h, parent,id) {
+    constructor(i, j, g, h, parent, id) {
         this.i = i;
         this.j = j;
         this.g = g; // Distancia al comienzo
@@ -53,7 +53,8 @@ class AStar {
         for (const [dx, dy, dist] of this.getDirs()) {
             if (this.inBounds(nodo.i + dx, nodo.j + dy)) {
                 const celdaAdyacente = this.grid[nodo.i + dx][nodo.j + dy];
-                if ((celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.maxHeight > celdaAdyacente.height) || (celdaAdyacente.type === CELL_TYPE.BLANK || celdaAdyacente.type === CELL_TYPE.END || celdaAdyacente.type === CELL_TYPE.WAYPOINT)) {
+                const condicion = celdaAdyacente.type === CELL_TYPE.START || celdaAdyacente.type === CELL_TYPE.WAYPOINT  
+                if (condicion || (celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.maxHeight > celdaAdyacente.height) || (celdaAdyacente.type === CELL_TYPE.BLANK || celdaAdyacente.type === CELL_TYPE.END || celdaAdyacente.type === CELL_TYPE.WAYPOINT)) {
                     neighbours.push([celdaAdyacente, dist]);
                 }
             }
@@ -62,17 +63,21 @@ class AStar {
     }
 
     search(startN, endNode) {
-        let startNode = new GraphNode(startN.i, startN.j, 0, this.h(startN, endNode), null,startN.id);
+        let startNode = new GraphNode(startN.i, startN.j, 0, this.h(startN, endNode), null, startN.id);
         const abierta = [startNode];
         const cerrada = {};
         const explored_path = []
+        let solucion = false;
         let nodoEnd = null;
 
         while (abierta.length !== 0) {
+
+            //Mientras 
             const indexRemove = abierta.reduce((prev, current, index) => (abierta[prev].f() < abierta[index].f() ? prev : index), 0);
             const [nodoMejor] = abierta.splice(indexRemove, 1);
             if (nodoMejor.i === endNode.i && nodoMejor.j === endNode.j) {
                 nodoEnd = nodoMejor;
+                solucion = true
                 break;
             };
             for (const [celdaAdyacente, dist] of this.getNeighbours(nodoMejor)) {
@@ -80,14 +85,22 @@ class AStar {
                 let nodoCerrada = cerrada[celdaAdyacente.id];
                 let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
                 let nodo = null;
+
+                // 5. El nodo adyacente no esta ni en la lista abierta ni en cerrada
                 if (!nodoCerrada && !nodoAbierta) {
-                    nodo = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor,celdaAdyacente.id);
+                    nodo = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor, celdaAdyacente.id);
                     nodo.g = new_cost;
                     nodo.h = this.h(nodo, endNode);
                     explored_path.push([nodo.i, nodo.j]);
                     abierta.push(nodo);
-                } else {
+                }
+
+
+                else {
+                    // Casos 3 y 4: El nodo adyacente puede estar en la abierta o en la cerrada
                     nodo = nodoCerrada || nodoAbierta
+
+                    // Reevaluamos el conflicto y actualizamos el nodo en caso que el camino sea mejor
                     if (new_cost < nodo.g) {
                         nodo.g = new_cost
                         nodo.parent = nodoMejor
@@ -136,7 +149,7 @@ class AStar {
             path.shift();
             path.pop();
         }
-        return [path.reverse(), explored_path];
+        return [path.reverse(), explored_path, solucion];
 
     }
 }
