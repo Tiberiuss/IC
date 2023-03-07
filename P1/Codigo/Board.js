@@ -27,17 +27,21 @@ function generateMaze(grid) {
 
     //Muros exteriores
     for (let i = 0; i < grid.length; i++) {
-        if (i==0 || i == grid.length - 1) {
+        if (i == 0 || i == grid.length - 1) {
             for (let j = 0; j < grid[i].length; j++) {
                 grid[i][j].type = CELL_TYPE.BLOCKED
+                grid[i][j].height = 1500;
             }
         } else {
             grid[i][0].type = CELL_TYPE.BLOCKED
-            grid[i][grid[i].length-1].type = CELL_TYPE.BLOCKED
+            grid[i][0].height = 1500
+            grid[i][grid[i].length - 1].type = CELL_TYPE.BLOCKED
+            grid[i][grid[i].length - 1].height = 1500
+
         }
     }
     //Muros interiores
-    recursiveDivision(1,grid.length-2,1,grid.length-2,grid)
+    recursiveDivision(1, grid.length - 2, 1, grid.length - 2, grid)
 }
 
 function randomNumber(min, max) {
@@ -46,9 +50,9 @@ function randomNumber(min, max) {
 
 function recursiveDivision(minX, maxX, minY, maxY, grid) {
     let horizontal;
-    if (maxX-minX < maxY-minY)
+    if (maxX - minX < maxY - minY)
         horizontal = true
-    else if (maxY -minY< maxX -minX)
+    else if (maxY - minY < maxX - minX)
         horizontal = false
     else
         horizontal = randomNumber(0, 1) == 0
@@ -56,30 +60,34 @@ function recursiveDivision(minX, maxX, minY, maxY, grid) {
     if (horizontal) {
         if (maxX - minX < 2) return;
 
-        let y = Math.floor(randomNumber(minY, maxY)/2)*2
-        let hole = Math.floor(randomNumber(minX, maxX)/2)*2 +1
+        let y = Math.floor(randomNumber(minY, maxY) / 2) * 2
+        let hole = Math.floor(randomNumber(minX, maxX) / 2) * 2 + 1
         for (let i = minX; i <= maxX; i++) {
-            grid[i][y].type=CELL_TYPE.BLOCKED;
-            grid[i][y].paint({user:{maxHeight:0}})
+            grid[i][y].type = CELL_TYPE.BLOCKED;
+            grid[i][y].paint({ user: { features: 0 } })
+            grid[i][y].height = 1500;
+
 
         }
-        grid[hole][y].type=CELL_TYPE.BLANK;
+        grid[hole][y].type = CELL_TYPE.BLANK;
         grid[hole][y].paint()
 
-        recursiveDivision(minX, maxX, minY, y-1, grid);
+        recursiveDivision(minX, maxX, minY, y - 1, grid);
         recursiveDivision(minX, maxX, y + 1, maxY, grid);
     } else {
         if (maxY - minY < 2) return;
 
-        let x = Math.floor(randomNumber(minX, maxX)/2)*2;
-        let hole = Math.floor(randomNumber(minY, maxY)/2)*2 +1
+        let x = Math.floor(randomNumber(minX, maxX) / 2) * 2;
+        let hole = Math.floor(randomNumber(minY, maxY) / 2) * 2 + 1
         for (let j = minY; j <= maxY; j++) {
-            grid[x][j].type=CELL_TYPE.BLOCKED;
-            grid[x][j].paint({user:{maxHeight:0}})
-        }
-        grid[x][hole].type=CELL_TYPE.BLANK;
+            grid[x][j].type = CELL_TYPE.BLOCKED;
+            grid[x][j].paint({ user: { features: 0 } })
+            grid[x][j].height = 1500;
 
-        recursiveDivision(minX, x-1, minY, maxY, grid);
+        }
+        grid[x][hole].type = CELL_TYPE.BLANK;
+
+        recursiveDivision(minX, x - 1, minY, maxY, grid);
         recursiveDivision(x + 1, maxX, minY, maxY, grid);
     }
 }
@@ -87,7 +95,7 @@ function recursiveDivision(minX, maxX, minY, maxY, grid) {
 
 
 class Board {
-    constructor(cols, rows, cellSize,space) {
+    constructor(cols, rows, cellSize, space) {
         this.space = space;
         this.cols = cols;
         this.rows = rows;
@@ -100,13 +108,12 @@ class Board {
         this.startNode = null;
         this.endNode = null;
         this.waypoints = [];
-        this.userFeatures = {
-            "maxHeight": 0
-        }
+        this.userFeatures = [] // trampas que puede atravesar
         this.images = {}
         /** @type {CanvasRenderingContext2D} */
         this.ctx = null;
         this.animating = [];
+        this.peso = 0;
     }
 
     create() {
@@ -120,10 +127,18 @@ class Board {
             let rect = canvas.getBoundingClientRect();
             let mouseX = event.x - rect.left;
             let mouseY = event.y - rect.top;
-            let i = Math.floor(mouseX/(this.cellSize+this.space))
-            let j = Math.floor(mouseY/(this.cellSize+this.space))
+            let i = Math.floor(mouseX / (this.cellSize + this.space))
+            let j = Math.floor(mouseY / (this.cellSize + this.space))
 
             if (this.grid[i][j].checkIn(mouseX, mouseY)) {
+                // Parar animacion
+                if (this.animating.length !== 0) {
+                    let el = this.animating.pop()
+                    while (el) {
+                        clearInterval(el)
+                        el = this.animating.pop()
+                    }
+                }
                 if (this.grid[i][j].type === this.selected_cell) {
                     // Deseleccionar casilla
                     switch (this.selected_cell) {
@@ -137,10 +152,11 @@ class Board {
                             let index = this.waypoints.findIndex(w => w.i === i && w.j === j);
                             this.waypoints.splice(index, 1);
                             break;
-                        }
-                        this.grid[i][j].type = CELL_TYPE.BLANK;
-                        this.grid[i][j].height = 0;
-                    
+                    }
+                    this.grid[i][j].type = CELL_TYPE.BLANK;
+                    this.grid[i][j].height = 0;
+                    this.grid[i][j].peso = 0;
+
                 } else {
                     // Seleccionar casillas
 
@@ -164,6 +180,9 @@ class Board {
                     }
                     this.grid[i][j].type = this.selected_cell;
                     this.grid[i][j].height = this.blocked_height;
+                    this.grid[i][j].peso = this.peso;
+                    this.grid[i][j].color = null;
+
                 }
                 // Comenzar algoritmo al mover las casillas de start o end
                 if (this.selected_cell === CELL_TYPE.END && this.startNode) {
@@ -174,7 +193,7 @@ class Board {
             }
             this.paint();
         });
-        function loadImages(imagesList,callback) {
+        function loadImages(imagesList, callback) {
             const images = {};
             let loadedImgs = 0;
             for (let [key, value] of Object.entries(imagesList)) {
@@ -186,32 +205,32 @@ class Board {
                 };
                 images[key].src = value;
             }
-        } 
-        this.ctx.font = this.width/20 + 'px arial'
-        this.ctx.textAlign= 'center'
+        }
+        this.ctx.font = this.width / 20 + 'px arial'
+        this.ctx.textAlign = 'center'
         this.ctx.fillStyle = 'black'
         this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.fillStyle = 'white'
-        this.ctx.fillText('LOADING RESOURCES', this.width/2,this.height/2)
+        this.ctx.fillText('LOADING RESOURCES', this.width / 2, this.height / 2)
         this.images = loadImages(
             {
-                ANGEL: "assets/scale/angel.png",
-                WALL: "assets/scale/crystal_wall11.png",
-                SOLDIER: "assets/scale/deep_elf_soldier.png",
-                TRAP: "assets/scale/dngn_trap_spear.png",
-                GIANT: "assets/scale/hill_giant.png",
-                HUMAN: "assets/scale/human.png",
-                KEY: "assets/scale/key.png",
-                BOX: "assets/scale/large_box.png",
-                LAVA: "assets/scale/lava3.png",
-                BOMB: "assets/scale/sprite.png",
+                ANGEL: "assets/angel.png",
+                WALL: "assets/crystal_wall11.png",
+                SOLDIER: "assets/deep_elf_soldier.png",
+                TRAP: "assets/dngn_trap_spear.png",
+                GIANT: "assets/hill_giant.png",
+                HUMAN: "assets/human.png",
+                KEY: "assets/key.png",
+                BOX: "assets/large_box.png",
+                LAVA: "assets/lava3.png",
+                BOMB: "assets/sprite.png",
             },
             (images) => {
                 this.images = images;
                 initGrid(this);
                 this.paint()
             }
-        );        
+        );
     }
 
     reset() {
@@ -243,8 +262,8 @@ class Board {
         for (let i = 0; i < this.grid.length; i++) {
             for (let j = 0; j < this.grid[i].length; j++) {
                 this.grid[i][j].paint(this.userFeatures);
-                this.ctx.font = this.cellSize/3 + 'px courier'
-                this.ctx.textAlign= 'center'
+                this.ctx.font = this.cellSize / 3 + 'px courier'
+                this.ctx.textAlign = 'center'
                 this.ctx.fillStyle = 'white'
                 //this.ctx.fillText(i + ',' + j, this.grid[i][j].x + this.cellSize / 2, this.grid[i][j].y + this.cellSize / 2 + 10)
             }
@@ -258,6 +277,7 @@ class Board {
             return;
         }
         this.resetPath()
+        this.paint()
         let astar = new AStar(this.grid, this.rows, this.cols, this.userFeatures);
         let fullPath = []
         let fullExploredPath = []
@@ -269,37 +289,37 @@ class Board {
             fullExploredPath.push(...explored_path)
             if (!solucion) break;
             fullPath.push(...path)
-            fullPath.push([last.i,last.j])
+            fullPath.push([last.i, last.j])
             first = last
         }
         this.waypoints.pop()
 
-        function* generator(data){
+        function* generator(data) {
             yield* data;
         }
 
         const paintLinePath = () => {
             let prev = this.startNode
             for (const cell of fullPath) {
-                let actual = this.grid[cell[0]][cell[1]]               
+                let actual = this.grid[cell[0]][cell[1]]
                 this.ctx.save()
-                this.ctx.translate(this.cellSize/2,this.cellSize/2)
+                this.ctx.translate(this.cellSize / 2, this.cellSize / 2)
                 this.ctx.strokeStyle = "white"
                 this.ctx.lineWidth = 2
                 this.ctx.beginPath();
-                this.ctx.moveTo(prev.x,prev.y)
+                this.ctx.moveTo(prev.x, prev.y)
                 this.ctx.lineTo(actual.x, actual.y);
-                this.ctx.closePath();   
+                this.ctx.closePath();
                 this.ctx.stroke();
                 this.ctx.restore()
                 prev = actual
             }
-            if (fullPath.length !== 0) {                
+            if (fullPath.length !== 0) {
                 this.ctx.beginPath()
                 this.ctx.strokeStyle = "white"
                 this.ctx.lineWidth = 2
-                this.ctx.lineTo(prev.x+ this.cellSize/2,prev.y+ this.cellSize/2);
-                this.ctx.lineTo(this.endNode.x  + this.cellSize/2, this.endNode.y  + this.cellSize/2);                            
+                this.ctx.lineTo(prev.x + this.cellSize / 2, prev.y + this.cellSize / 2);
+                this.ctx.lineTo(this.endNode.x + this.cellSize / 2, this.endNode.y + this.cellSize / 2);
                 this.ctx.closePath()
                 this.ctx.stroke();
             }
@@ -309,17 +329,17 @@ class Board {
             let gen = generator(fullPath)
             let inter2 = setInterval(() => {
                 let cell = gen.next().value
-                if(!cell){
+                if (!cell) {
                     clearInterval(inter2)
                     paintLinePath()
                 } else {
                     if (this.grid[cell[0]][cell[1]].type === CELL_TYPE.BLANK || this.grid[cell[0]][cell[1]].type === CELL_TYPE.EXPLORED_PATH) {
                         this.grid[cell[0]][cell[1]].type = CELL_TYPE.PATH;
-                    } else if (this.grid[cell[0]][cell[1]].type === CELL_TYPE.BLOCKED) {
+                    } else if (this.grid[cell[0]][cell[1]].type === CELL_TYPE.BLOCKED || this.grid[cell[0]][cell[1]].type === CELL_TYPE.PENALTY ) {
                         this.grid[cell[0]][cell[1]].color = 'orange';
                     }
                     requestAnimationFrame(() => this.grid[cell[0]][cell[1]].paint())
-                    
+
                 }
 
             }, 100);
@@ -337,7 +357,7 @@ class Board {
             const gen = generator(fullExploredPath)
             const inter = setInterval(() => {
                 const cell = gen.next().value
-                if(!cell){
+                if (!cell) {
                     clearInterval(inter)
                     paintExplored()
                 } else {
@@ -345,8 +365,8 @@ class Board {
                         this.grid[cell[0]][cell[1]].type = CELL_TYPE.EXPLORED_PATH;
                         requestAnimationFrame(() => this.grid[cell[0]][cell[1]].paint())
                     }
-                }    
-            }, 35); 
+                }
+            }, 35);
             this.animating.push(inter)
         }
 

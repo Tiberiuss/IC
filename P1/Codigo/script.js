@@ -9,22 +9,30 @@ function main() {
     let btn_start_sim = document.querySelector("#start");
     let btn_reset_sim = document.querySelector("#reset");
     let btn_blocked_selector = document.querySelector("#blocked_selector");
+    let btn_penalty_selector = document.querySelector("#penalty_selector");
+
     board.blocked_height = btn_blocked_selector.value;
 
     btn_blocked_selector.addEventListener("change", (e) => {
         board.blocked_height = e.target.value;
     });
 
+    btn_penalty_selector.addEventListener("change", (e) => {
+        console.log(e.target);
+        board.peso = e.target.valueAsNumber;
+    });
+
     btn_tipo_celda.addEventListener("click", (e) => {
-        if (e.target.tagName !== "DIV" && e.target.tagName !== "SELECT") {
+        if (e.target.tagName !== "DIV" && e.target.tagName !== "SELECT" && e.target.tagName !== "INPUT") {
             document.querySelectorAll(".active").forEach((el) => el.classList.remove("active"));
             e.target.classList.add("active");
             board.selected_cell = cell_type_from_string(e.target.value);
-        } else if (e.target.tagName === "SELECT") {
+        } else if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") {
             document.querySelectorAll(".active").forEach((el) => el.classList.remove("active"));
             e.target.parentElement.classList.add("active");
             board.selected_cell = cell_type_from_string(e.target.parentElement.value);
         }
+       
     });
 
     btn_start_sim.addEventListener("click", () => {

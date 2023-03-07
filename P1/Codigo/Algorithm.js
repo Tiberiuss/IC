@@ -53,9 +53,8 @@ class AStar {
         for (const [dx, dy, dist] of this.getDirs()) {
             if (this.inBounds(nodo.i + dx, nodo.j + dy)) {
                 const celdaAdyacente = this.grid[nodo.i + dx][nodo.j + dy];
-                const condicion = celdaAdyacente.type === CELL_TYPE.START || celdaAdyacente.type === CELL_TYPE.WAYPOINT  
-                if (condicion || (celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.maxHeight > celdaAdyacente.height) || (celdaAdyacente.type === CELL_TYPE.BLANK || celdaAdyacente.type === CELL_TYPE.END || celdaAdyacente.type === CELL_TYPE.WAYPOINT)) {
-                    neighbours.push([celdaAdyacente, dist]);
+                if (celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.features.includes[celdaAdyacente.blocked_type] || celdaAdyacente.type !== CELL_TYPE.BLOCKED) {
+                    neighbours.push([celdaAdyacente, dist, celdaAdyacente.peso]);
                 }
             }
         }
@@ -80,8 +79,8 @@ class AStar {
                 solucion = true
                 break;
             };
-            for (const [celdaAdyacente, dist] of this.getNeighbours(nodoMejor)) {
-                let new_cost = nodoMejor.g + dist;
+            for (const [celdaAdyacente, dist, peso] of this.getNeighbours(nodoMejor)) {
+                let new_cost = nodoMejor.g + dist + peso;
                 let nodoCerrada = cerrada[celdaAdyacente.id];
                 let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
                 let nodo = null;
@@ -106,34 +105,6 @@ class AStar {
                         nodo.parent = nodoMejor
                     }
                 }
-
-
-
-                /* let nodoAbierta = abierta.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
-                if (nodoAbierta) {
-                    // nodoAbierta => nodo adyacente al expandido dentro de la lista   nodoMejor => nodo expandido
-                    // 1. Esta en abierta
-                    const gReorientacion = nodoMejor.g + dist;
-                    if (nodoAbierta.g > gReorientacion) {
-                        nodoAbierta.parent = nodoMejor; //El camino nuevo es mejor y se reorienta el enlace
-                        nodoAbierta.g = gReorientacion;
-                    }
-                } else {
-                    // 2. No esta en abierta
-                    let nodoCerrada = cerrada.find((nodo) => nodo.i === celdaAdyacente.i && nodo.j === celdaAdyacente.j);
-                    if (nodoCerrada) {
-                        // 3. Esta en cerrada
-                        continue;
-                    } else {
-                        // 5. No esta en abierta ni cerrada
-                        let nodoAdyacente = new GraphNode(celdaAdyacente.i, celdaAdyacente.j, null, null, nodoMejor);
-                        nodoAdyacente.g = dist;
-                        nodoAdyacente.h = this.h(nodoAdyacente, endNode);
-                        abierta.push(nodoAdyacente);
-                    } 
-                   
-                }
-                */
             }
             cerrada[nodoMejor.id] = nodoMejor;
 
