@@ -14,6 +14,24 @@ const cell_type_from_string = (str) => {
     return CELL_TYPE?.[str] || CELL_TYPE.BLANK;
 };
 
+const USER_TYPE = {
+    HUMAN:"HUMAN",
+    ANGEL:"ANGEL",
+    GIANT:"GIANT",
+}
+
+const BLOCKED_TYPE = {
+    SPIKES:"SPIKES",
+    LAVA:"LAVA",
+    BOMB:"BOMB",
+}
+
+const BLOCKED_INMUNE = {
+    SPIKES: [USER_TYPE.HUMAN,USER_TYPE.ANGEL],
+    LAVA: [USER_TYPE.ANGEL],
+    BOMB: [USER_TYPE.GIANT,USER_TYPE.ANGEL]
+}
+
 class Cell {
     constructor(board, i, j, x, y, w, id, peso = 0) {
         this.i = i;
@@ -32,13 +50,15 @@ class Cell {
     }
 
     reset() {
+        this.board.ctx.fillStyle = 'black'
+        this.board.ctx.fillRect(this.x,this.y,this.w,this.w)
         this.type = CELL_TYPE.BLANK;
     }
 
-    paint(user) {
+    paint() {
         let ctx = this.board.ctx
         let images = this.board.images
-
+ 
         ctx.save();
         ctx.beginPath();
         ctx.lineWidth = 0.1;
@@ -46,53 +66,59 @@ class Cell {
         switch (this.type) {
             case CELL_TYPE.BLANK:
                 ctx.fillStyle = "black";
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2
                 ctx.rect(this.x, this.y, this.w, this.w);
-
+                ctx.stroke()
                 ctx.fill();
                 //ctx.stroke();
                 break;
             case CELL_TYPE.START:
-                ctx.fillStyle = "blue";
-                ctx.strokeStyle = "white";
+                switch (this.board.user_type) {
+                    case USER_TYPE.HUMAN:
+                        ctx.drawImage(images["HUMAN"], this.x, this.y, this.w, this.w);
+                        break;
+                    case USER_TYPE.GIANT:
+                        ctx.drawImage(images["GIANT"], this.x, this.y, this.w, this.w);
+                        break;
+                    case USER_TYPE.ANGEL:
+                        ctx.drawImage(images["ANGEL"], this.x, this.y, this.w, this.w);
+                        break;
+                }
+                ctx.strokeStyle = "blue";
                 ctx.lineWidth = 2;
                 ctx.rect(this.x, this.y, this.w, this.w);
-                ctx.fill();
                 ctx.stroke();
                 break;
             case CELL_TYPE.END:
-                ctx.strokeStyle = "black";
-                ctx.fillStyle = "yellow";
+                ctx.drawImage(images["BOX"], this.x, this.y, this.w, this.w);
+                ctx.strokeStyle = "yellow";
+                ctx.lineWidth = 2;
                 ctx.rect(this.x, this.y, this.w, this.w);
-                ctx.fill();
                 ctx.stroke();
                 break;
             case CELL_TYPE.BLOCKED:
                 ctx.drawImage(images["WALL"], this.x, this.y, this.w, this.w);
                 break;
             case CELL_TYPE.USER_BLOCKED:
-                ctx.closePath();
-                ctx.beginPath();
-                let img;
-                switch (this.blocked_type) {
-                    case 0:
-                        img = images["TRAP"]
-                        break;
-                    case 1:
-                        img = images["LAVA"]
-                        break;
-                    case 2:
-                        img = images["ANGEL"]
-                        break;
-                    default:
-                        break;
-                }
                 ctx.fillStyle = this.color ?? "black";
                 ctx.rect(this.x, this.y, this.w, this.w);
                 ctx.fill();
-                ctx.drawImage(img, this.x, this.y, this.w, this.w);
-                ctx.strokeStyle = user.maxHeight.includes[this.blocked_type] ? "lightgreen" : "crimson";
+                switch (this.blocked_type) {
+                    case BLOCKED_TYPE.SPIKES:
+                        ctx.drawImage(images["TRAP"], this.x, this.y, this.w, this.w);
+                        break;
+                    case BLOCKED_TYPE.LAVA:
+                        ctx.drawImage(images["LAVA"], this.x, this.y, this.w, this.w);
+                        break;
+                    case BLOCKED_TYPE.BOMB:
+                        ctx.drawImage(images["BOMB"], this.x, this.y, this.w, this.w);
+                        break;
+                }
+                ctx.strokeStyle = this.isWalkable() ? "lightgreen" : "crimson";
                 ctx.lineWidth = 2;
                 ctx.stroke();
+                break;
             case CELL_TYPE.PATH:
                 ctx.fillStyle = "orange";
                 ctx.rect(this.x, this.y, this.w, this.w);
@@ -104,13 +130,15 @@ class Cell {
                 ctx.rect(this.x, this.y, this.w, this.w);
                 ctx.fill();
                 ctx.stroke();
-
                 break;
             case CELL_TYPE.WAYPOINT:
                 ctx.fillStyle = "lightblue";
                 ctx.rect(this.x, this.y, this.w, this.w);
                 ctx.fill();
                 ctx.stroke();
+
+                ctx.drawImage(images["KEY"], this.x, this.y, this.w, this.w);
+
                 break;
             case CELL_TYPE.PENALTY:
                 ctx.strokeStyle = "yellow";
@@ -131,6 +159,13 @@ class Cell {
 
     checkIn(x, y) {
         return x > this.x && x <= this.x + this.w && y > this.y && y <= this.y + this.w;
+    }
+
+    isWalkable() {
+        if (this.type === CELL_TYPE.USER_BLOCKED) {
+            return BLOCKED_INMUNE?.[this.blocked_type].includes(this.board.user_type);
+        }
+        return true
     }
 }
 

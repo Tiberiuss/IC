@@ -53,7 +53,7 @@ class AStar {
         for (const [dx, dy, dist] of this.getDirs()) {
             if (this.inBounds(nodo.i + dx, nodo.j + dy)) {
                 const celdaAdyacente = this.grid[nodo.i + dx][nodo.j + dy];
-                if (celdaAdyacente.type === CELL_TYPE.BLOCKED && this.user.features.includes[celdaAdyacente.blocked_type] || celdaAdyacente.type !== CELL_TYPE.BLOCKED) {
+                if (celdaAdyacente.type === CELL_TYPE.USER_BLOCKED && celdaAdyacente.isWalkable() || (celdaAdyacente.type !== CELL_TYPE.BLOCKED && celdaAdyacente.type !== CELL_TYPE.USER_BLOCKED)) {
                     neighbours.push([celdaAdyacente, dist, celdaAdyacente.peso]);
                 }
             }

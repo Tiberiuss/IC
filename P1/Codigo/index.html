@@ -11,38 +11,90 @@
 
 <body>
     <div class="wrapper">
-        <canvas id="canvas"></canvas>
-        <div class="innerWrapper">
+        <div class="menuWrapper">
             <h1>Menu</h1>
+            <hr style="width: 100%;margin-top: -20px;">
             <div id="cellType" class="menu">
-                <button value="START">Inicio</button>
-                <button value="END">Fin</button>
-                <button value="BLOCKED">
-                    Obstaculo
-                    <select id="blocked_selector">
-                        <option value="250">250</option>
-                        <option value="750">750</option>
-                        <option value="1500">1500</option>
+                <h1 style="margin: 0;">Personajes</h1>
+                <div class="selectionMenu">
+                    <button class="userBtn button active" value="HUMAN">
+                        <img src="./assets/human.png" width="32" height="32" style="vertical-align: middle;">
+                        <br>
+                        Humano
+                    </button>
+                    <button class="userBtn button" value="GIANT">
+                        <img src="./assets/hill_giant.png" width="32" height="32" style="vertical-align: middle">
+                        <br>
+                        Gigante
+                    </button>
+                    <button class="userBtn button" value="ANGEL">
+                        <img src="./assets/angel.png" width="32" height="32" style="vertical-align: middle">
+                        <br>
+                        Angel
+                    </button>
+                </div>
+                <hr style="width: 100%;">
+                <div style="display: grid;grid-template-columns: repeat(3,1fr);gap: 10px;">
+                    <button class="cell button" data-cell-type="START">Inicio</button>
+                    <button class="cell button" data-cell-type="END">Fin</button>
+                    <button class="cell button" data-cell-type="WAYPOINT">Waypoint</button>
+                </div>
+                <hr style="width: 100%;">
 
-                    </select>
-                </button>
+                <div style="display: flex;flex-direction: column;gap: 10px;">
+                    <div class="selectionMenu">
+                        <button class="cell obstacleBtn button" value="SPIKES" data-cell-type="USER_BLOCKED">
+                            <img src="./assets/dngn_trap_spear.png" width="32" height="32" style="vertical-align: middle;">
+                            <br>
+                            Trampa 1
+                        </button>
+                        <button class="cell obstacleBtn button" value="LAVA" data-cell-type="USER_BLOCKED">
+                            <img src="./assets/lava3.png" width="32" height="32" style="vertical-align: middle">
+                            <br>
+                            Trampa 2
+                        </button>
+                        <button class="cell obstacleBtn button" value="BOMB" data-cell-type="USER_BLOCKED">
+                            <img src="./assets/sprite.png" width="32" height="32" style="vertical-align: middle">
+                            <br>
+                        Trampa 3
+                    </button>
+                </div>
+                
+                <div style="display: flex;flex-direction: column;gap: 10px;">
+                    <button class="cell obstacleBtn button" value="WALL" data-cell-type="BLOCKED">
+                        <img src="./assets/crystal_wall11.png" width="32" height="32" style="vertical-align: middle;">
+                        <br>
+                        Muro
+                    </button>
+                    <button class="cell button" data-cell-type="PENALTY">
+                        Penalización
+                        <input id="penalty_selector" type="number" value="0" min="0">
+                    </button>
+                </div>
+                </div>
 
-                <button value="PENALTY">
-                    Penalización
-                    <input id="penalty_selector" type="number" value="0" min="0">
-                </button>
+                <hr style="width: 100%;">
+                
+                <div style="display: grid;grid-template-columns: 2fr 1fr 1fr">
+                    <label style="width: max-content;">Filas: </label>
+                    <input type="number" value="11" min="1" step="2" id="filas">
+                    <label style="width: max-content;">Columnas:</label>
+                    <input type="number" value="11" min="1" step="2" id="columnas">
+                    <button class="button" id="generateBoard" style="background-color: black;margin-left: 15px;grid-row: 1/3;grid-column: 3;">GENERAR</button>
+                </div>
 
-
-                <button value="WAYPOINT">Waypoint</button>
+                <div class="wrapperButtons">
+                    <button class="button" id="start">Iniciar Simulación</button>
+                    <button class="button" id="reset">Limpiar tablero</button>
+                    <button class="button" id="generateMaze">Generar laberinto</button>
+                </div>
             </div>
         </div>
-        <div class="wrapperButtons">
-            <button id="start">Iniciar Simulación</button>
-            <button id="reset">Limpiar tablero</button>
-        </div>
+        <canvas id="canvas"></canvas>
     </div>
     <script src="Cell.js"></script>
     <script src="Algorithm.js"></script>
+    <script src="Maze.js"></script>
     <script src="Board.js"></script>
     <script src="script.js"></script>
 </body>
