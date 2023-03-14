@@ -23,6 +23,12 @@ class Board {
         this.animating = [];
     }
 
+    destroy() {
+        let canvas = document.querySelector("canvas")
+        let new_canvas = canvas.cloneNode(true);
+        canvas.parentNode.replaceChild(new_canvas,canvas);
+    }
+
     create() {
         if (this.ctx) return this.ctx;
         let canvas = document.querySelector("canvas");
@@ -228,11 +234,13 @@ class Board {
         let astar = new AStar(this.grid, this.rows, this.cols, this.userFeatures);
         let fullPath = []
         let fullExploredPath = []
+        let sol = false;
 
         this.waypoints.push(this.endNode)
         let first = this.startNode
         for (const last of this.waypoints) {
             let [path, explored_path, solucion] = astar.search(first, last);
+            sol = solucion
             fullExploredPath.push(...explored_path)
             if (!solucion) break;
             fullPath.push(...path)
@@ -300,7 +308,8 @@ class Board {
                 const cell = gen.next().value
                 if (!cell) {
                     clearInterval(inter)
-                    paintBestPath()
+                //Si no se ha podido llegar a todos los waypoints no pintar
+                   if(sol) paintBestPath()
                 } else {
                     if (this.grid[cell[0]][cell[1]].type === CELL_TYPE.BLANK) {
                         this.grid[cell[0]][cell[1]].type = CELL_TYPE.EXPLORED_PATH;
@@ -310,7 +319,6 @@ class Board {
             }, 15);
             this.animating.push(inter)
         }
-
         paintPath()
     }
 }

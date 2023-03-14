@@ -65,7 +65,16 @@ function main() {
     btn_generate_board.addEventListener("click",() => {
         let filas = document.querySelector("#filas").valueAsNumber
         let columnas = document.querySelector("#columnas").valueAsNumber
+        let prev_block_selected = board.blocked_type
+        let prev_selected_cell = board.selected_cell
+        let prev_user_type = board.user_type
+        let prev_peso = board.peso
+        board.destroy()
         board = new Board(filas, columnas, 50,0);
+        board.peso = prev_peso;
+        board.blocked_type = prev_block_selected;
+        board.selected_cell = prev_selected_cell
+        board.user_type = prev_user_type;
         board.create();
     })
 }
