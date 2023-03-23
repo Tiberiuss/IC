@@ -69,9 +69,26 @@ function infor(p,n) {
 
 function start() {
   document.querySelector("#salida").innerHTML = JSON.stringify(rawData)
-  let cont = 4;
-  while (cont > 0) {
-    let data = parseData(rawData)
+  console.log(id3());
+}
+
+function id3() {
+  if (rawData[0].length === 1) {
+    return {
+      value: rawData[0][0]
+    }
+  }
+
+  let uniqueClass = [...new Set(rawData.map((row,index) => row[rawData[index].length-1].trim()))]
+  if (uniqueClass.length === 1) {
+    return {
+      etiqueta: header[0],
+      value: uniqueClass[0]
+    }
+  }
+
+  let data = parseData(rawData)
+  let etiqueta = header[0]
     let minimo = 1;
     let atributo;
     for (const atribute in data) {
@@ -82,12 +99,21 @@ function start() {
       }
     }
     console.log(atributo,minimo);
-    for (let index = 0; index < data.length; index++) {
-      rawData[index].splice(0,1);
+    for (let index = 0; index < rawData.length; index++) {
+      rawData[index].splice(header.indexOf(atributo),1);
     }
-    console.log(rawData);
-    cont--;
-  }
+    header.shift()
+    const uniqueRows = [...new Set(rawData.map(row => JSON.stringify(row)))];
+    rawData = uniqueRows.map(row => JSON.parse(row));
+
+    // TODO para cada valor una rama y repetir id3
+    // TODO Estructura del arbol?
+    // TODO recorrer el arbol, es decir, predecir un ejemplo
+
+    return {
+      etiqueta,
+      next: id3()
+    }
 }
 
 // data = {
