@@ -2,6 +2,19 @@ const file = document.getElementById("file")
 const button = document.getElementById("start")
 let rawData;
 let header;
+let maximo = 0
+
+/*
+
+    <path fill="none" stroke="#000000" d="M150,100L250,200"></path>
+    <circle cx="150" cy="100" r="35" fill="green"></circle>
+    <text x="135" y="100" fill="white" dy=".3em">Raiz</text>
+
+    <circle cx="250" cy="200" r="35" fill="green"></circle>
+    <text x="135" y="100" fill="white" dy=".3em">Raiz</text>
+    <circle cx="50" cy="200" r="35" fill="green"></circle>
+    <text x="135" y="100" fill="white" dy=".3em">Raiz</text>
+*/
 
 button.addEventListener("click", start)
 file.addEventListener('change', (e) => {
@@ -17,7 +30,7 @@ file.addEventListener('change', (e) => {
   };
 })
 
-function parseData(rows,features) {
+function parseData(rows, features) {
   let data = {}
   rows.forEach((row, idx) => {
     row.forEach((col, colIdx) => {
@@ -67,10 +80,58 @@ function infor(p, n) {
 
 function start() {
   document.querySelector("#salida").innerHTML = JSON.stringify(rawData)
-  console.log(id3(rawData,header));
+  const resultado = id3(rawData, header)
+  console.log(resultado);
+  maximo = maxNodes(resultado)
+  pintar(resultado,0,100,maximo)
 }
 
-function id3(data,features) {
+function pintar(data,x,y,maximus) {
+  console.log(x,y,maximus);
+  const svg = document.querySelector("#representation")
+  let circle = document.createElementNS("http://www.w3.org/2000/svg","circle")
+  circle.setAttribute("cx",x)
+  circle.setAttribute("cy",y)
+  circle.setAttribute("r",50)
+  svg.append(circle)
+
+  if (data.children) {
+    let i=0;
+    for (const children in data.children) {
+      pintar(data.children[children], (maximo/ data.children.length)*i,y+100,maximus)
+      i++;
+    }
+  }
+}
+
+function maxNodes(data) {
+  const cola = [data]
+  let nivel = 0
+  let nodeCount = 1;
+  let max = -1;
+  while (true) {
+    nodeCount = cola.length
+    if (nodeCount === 0) {
+      break;
+    }
+
+    if (nodeCount > max) {
+      max = nodeCount
+    }
+
+    while (nodeCount !== 0) {
+      nodoActual = cola.shift()
+      for (const children in nodoActual.children) {
+        cola.push(nodoActual.children[children])
+      }
+      nodeCount--;
+    }
+    nivel++;
+  }
+  return max;
+}
+
+function id3(data, features) {
   // Si de la etiqueta solo queda un posible valor
   let uniqueClass = [...new Set(data.map((row, index) => row[data[index].length - 1].trim()))]
   if (uniqueClass.length === 1) {
@@ -81,7 +142,7 @@ function id3(data,features) {
 
   // No quedan mas atributos por los que separar
   // TODO coger el que sale mas veces?
-  if (features.length===0) {
+  if (features.length === 0) {
     return {
       value: data[0]
     }
@@ -89,7 +150,7 @@ function id3(data,features) {
 
 
   // Separar por el atributo con menor merito (menor información)
-  let parsedData = parseData(data,features)
+  let parsedData = parseData(data, features)
   let minimo = 5000;
   let bestFeature;
   for (const atribute in parsedData) {
@@ -103,7 +164,7 @@ function id3(data,features) {
   const featureValues = [...new Set(data.map((row) => row[bestFeatureIndex]))];
   const children = featureValues.map((value) => {
     let subset = data.filter((row) => row[bestFeatureIndex] === value);
-    subset = subset.map(row => row.filter((col,index) => index !== bestFeatureIndex)) // Eliminar la columna con el atributo seleccionado
+    subset = subset.map(row => row.filter((col, index) => index !== bestFeatureIndex)) // Eliminar la columna con el atributo seleccionado
     subset = [...new Set(subset.map(row => JSON.stringify(row)))].map(row => JSON.parse(row)); // Y borrar las filas que no sean unicas
     const remainingFeatures = features.filter((featureIndex) => featureIndex !== bestFeature);
     return {
@@ -138,7 +199,7 @@ TODO generalizar para mas clases ademas de solo si y no
 
 {
   etiqueta: Tiempo
-  ramas: [
+  children: [
     {
       valor: soleado,
       etiqueta: Humedad
