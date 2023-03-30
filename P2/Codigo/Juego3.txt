@@ -1,0 +1,7 @@
+Ganas,Sueño,IrAClase
+MuyPocas,Poco,No
+MuyPocas,Mucho,No
+Pocas,Mucho,No
+Pocas,Poco,Si
+Muchas,Poco,Si
+Muchas,Muchas,Depende
