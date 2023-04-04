@@ -90,9 +90,15 @@ function infor(attribute, N) {
 }
 
 function start() {
-  // TODO revisar Juego3.txt no genera arbol bien
   const resultado = id3(rawData, header);
+  const reglas = pintarReglas(resultado, "")
   console.log(resultado);
+  let displayReglas = document.querySelector("#reglas")
+  reglas.forEach((regla)=>{
+    let li = document.createElement("li");
+    li.innerText = regla;
+    displayReglas.appendChild(li);
+  })
   let svg = document.querySelector("#representation");
   svg.parentNode.replaceChild(svg.cloneNode(false), svg);
   maximo = maxNodes(resultado);
@@ -123,6 +129,49 @@ function start() {
     "viewBox",
     `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`
   );
+}
+
+function pintarReglas(data) {
+  const camino = []
+  const reglas = []
+  formarReglas(data, camino , reglas)
+  return reglas
+}
+
+function formarReglas(data, camino, reglas) {
+  if (data) {
+
+    camino.push(data)
+
+    if (data.children) {
+      for (const children of data.children) {
+        formarReglas(children, camino, reglas)
+      }
+    }
+    else {
+      let regla = ""
+      for (let nodo of camino) {
+        if (nodo.children) {
+          if (nodo.from) {
+            regla += `${nodo.from} + ${nodo.value}: `
+          }
+          else {
+            regla += `${nodo.value}: `
+          }
+        }
+        else {
+          regla += `${nodo.from} -> ${nodo.value}`
+        }
+      }
+      reglas.push(regla)
+    }
+
+    camino.pop()
+
+
+  }
+  return;
+
 }
 
 function pintar(data, x, y, start, end, parentX, parentY) {
@@ -276,23 +325,4 @@ R1: tiempoSoleado && humedadSI = SI
 TODO revisar codigo
 TODO hacer arbolito (svg o canvas) ✅
 TODO generalizar para mas clases ademas de solo si y no ✅
-*/
-
-/*{
-  etiqueta: Tiempo
-  children: [
-    {
-      valor: soleado,
-      etiqueta: Humedad
-      ramas: [
-        {valor:high,etiqueta: yes}
-        {valor:low,etiqueta: no}
-      ]
-    }
-  ]
-},
-{
-  valor: Overcast,
-  etiqueta: yes
-}
 */
