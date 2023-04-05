@@ -94,6 +94,7 @@ function start() {
   const reglas = pintarReglas(resultado, "")
   console.log(resultado);
   let displayReglas = document.querySelector("#reglas")
+  displayReglas.innerHTML = ''
   reglas.forEach((regla)=>{
     let li = document.createElement("li");
     li.innerText = regla;
@@ -203,7 +204,7 @@ function pintar(data, x, y, start, end, parentX, parentY) {
   let fromRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   fromRect.setAttribute("x", (parentX + x) / 2 - 40);
   fromRect.setAttribute("y", (parentY + y) / 2 - 10);
-  fromRect.setAttribute("width", 100);
+  fromRect.setAttribute("width", 80);
   fromRect.setAttribute("height", 20);
   fromRect.setAttribute("fill", "white");
   //fromRect.setAttribute("stroke","black")
@@ -214,6 +215,8 @@ function pintar(data, x, y, start, end, parentX, parentY) {
   from.appendChild(document.createTextNode(data.from));
   from.setAttribute("alignment-baseline", "middle");
   from.setAttribute("text-anchor", "middle");
+  from.setAttribute('lengthAdjust', "spacing")
+
 
   if (data.from) svg.prepend(fromRect);
   if (parentX && parentY) svg.prepend(line);
