@@ -176,7 +176,6 @@ function formarReglas(data, camino, reglas) {
 }
 
 function pintar(data, x, y, start, end, parentX, parentY) {
-  console.log(start, end);
   const svg = document.querySelector("#representation");
   let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   circle.setAttribute("cx", x);
