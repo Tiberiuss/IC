@@ -123,23 +123,37 @@ function lloyd(data) {
     const k_max = 10
     const lambda = 0.1
 
-    const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1)))
+    const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseInt(number))))
 
     const centros = [math.matrix([4, 4, 4, 4]), math.matrix([3, 4, 5, 6])];
+    const centros_anteriores = [math.matrix([4, 4, 4, 4]), math.matrix([3, 4, 5, 6])];
+
     let i = 0
     while (i < k_max) {
+        let centro_elegido;
         for (const muestra of muestras) {
-            let centro_elegido;
             let minimo_distancia = 1000000
+            //Calcular que centro cambiar para cada muestra
             for (const centro of centros) {
-                const distancia = math.distance(centro._data, muestra._data)
-                centro_elegido = distancia < minimo_distancia ? centro : centro_elegido;
+                const distancia = math.distance(centro, muestra)
+                if (distancia < minimo_distancia) {
+                    centro_elegido = distancia < minimo_distancia ? centro : centro_elegido;
+                }
             }
+            //Cambiar el centro elegido
+            centro_elegido = math.add(centro_elegido, math.multiply(lambda, math.subtract(muestra, centro_elegido)))
+            console.log(centro_elegido);
         }
 
-        //Cambiar el centro elegido
+
+
+
+        //Si los centros cumplen el criterio de convergencia un pedazo de break
+
 
         i++
+
+
     }
     //Mostrar los centros
 
