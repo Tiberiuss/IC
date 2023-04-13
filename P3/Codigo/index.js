@@ -101,7 +101,8 @@ let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 5.1,2.5,3.0,1.1,Iris-versicolor
 5.7,2.8,4.1,1.3,Iris-versicolor`;
 cleanData(rawData);
-lloyd(rawData)
+bayes(rawData)
+// lloyd(rawData)
 
 function cleanData(data) {
     rawData = data.split("\n").map((row) => row.split(","));
@@ -109,8 +110,32 @@ function cleanData(data) {
 }
 
 function bayes(data) {
+    let muestras = {}
+    data.forEach(muestra => {
+        const clase = muestra.slice(-1)[0]
+        const muestraM = math.matrix(muestra.slice(0, -1).map(number => parseFloat(number)))
+        if (clase in muestras) {
+            muestras[clase].push(muestraM)
+        }
+        else {
+            muestras = {...muestras, [clase]: [muestraM]}
+        }
+    })
 
+    //Calcular centros
+
+
+    //Calcular para cada muestra su centro de convergencia
+
+
+    //Sacar centros de convergencia con la informacion anterior
+
+
+    //Con los nuevos centros de convergencia ver a que clase pertenece
 }
+
+
+
 
 function k_medias(data) {
     const tolerancia_e = 0.01;
@@ -123,40 +148,62 @@ function lloyd(data) {
     const k_max = 10
     const lambda = 0.1
 
-    const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseInt(number))))
+    const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseFloat(number))))
 
-    const centros = [math.matrix([4, 4, 4, 4]), math.matrix([3, 4, 5, 6])];
-    const centros_anteriores = [math.matrix([4, 4, 4, 4]), math.matrix([3, 4, 5, 6])];
+
+    const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
+    const centros_anteriores = [centros[0], centros[1]];
 
     let i = 0
-    while (i < k_max) {
-        let centro_elegido;
+    let seguir = true
+    while (i < k_max && seguir) {
+        let indice_elegido;
+        //Calcular que centro cambiar para cada muestra
         for (const muestra of muestras) {
             let minimo_distancia = 1000000
-            //Calcular que centro cambiar para cada muestra
-            for (const centro of centros) {
+            centros.forEach((centro, index) => {
                 const distancia = math.distance(centro, muestra)
                 if (distancia < minimo_distancia) {
-                    centro_elegido = distancia < minimo_distancia ? centro : centro_elegido;
+                    indice_elegido = index
+                    minimo_distancia = distancia
                 }
-            }
+            })
             //Cambiar el centro elegido
+            let centro_elegido = centros[indice_elegido]
             centro_elegido = math.add(centro_elegido, math.multiply(lambda, math.subtract(muestra, centro_elegido)))
-            console.log(centro_elegido);
+            centros[indice_elegido] = centro_elegido
         }
-
-
-
 
         //Si los centros cumplen el criterio de convergencia un pedazo de break
 
-
+        centros.forEach((centro, index) => {
+            const distancia = math.distance(centro, centros_anteriores[index])
+            seguir = distancia < tolerancia_e ? false : true
+            centros_anteriores[index] = centro
+        })
         i++
 
 
     }
     //Mostrar los centros
 
+    console.log("Los centros resultantes son:");
+    centros.forEach((centro, index) => {
+        console.log(`El centro ${index} esta en ${centro}`);
+    })
+
 
     //Enseñar los puntos dados en testIris a que centro esta mas cercano
+    let punto = '5.1,3.5,1.4,0.2,Iris-setosa'.split(",")
+    punto = math.matrix(punto.slice(0, -1).map(number => parseFloat(number)))
+    let indice_pertenece;
+    let minimo_distancia = 10000000
+    centros.forEach((centro, index) => {
+        const distancia = math.distance(punto, centro)
+        if (distancia < minimo_distancia) {
+            indice_pertenece = index
+            minimo_distancia = distancia
+        }
+    })
+    console.log(`La muestra ${punto} pertenece al centro ${indice_pertenece}`)
 }
