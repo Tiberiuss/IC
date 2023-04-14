@@ -118,20 +118,58 @@ function bayes(data) {
             muestras[clase].push(muestraM)
         }
         else {
-            muestras = {...muestras, [clase]: [muestraM]}
+            muestras = { ...muestras, [clase]: [muestraM] }
         }
     })
 
+    let centros = {}
     //Calcular centros
-
+    for (const [clasesKeys, matrices] of Object.entries(muestras)) {
+        let centro;
+        matrices.forEach((matriz, index) => {
+            if (index === 0) {
+                centro = matriz
+            }
+            else {
+                centro = math.add(centro, matriz)
+            }
+        })
+        centro = math.divide(centro, matrices.length)
+        centros = { ...centros, [clasesKeys]: centro }
+    }
 
     //Calcular para cada muestra su centro de convergencia
+    const centros_convergencias = []
+    for (const [clasesKeys, matrices] of Object.entries(muestras)) {
+        let centro_convergencia;
+        matrices.forEach((matriz, index) => {
+            //TODO no le importa el orden de los multiplos, entonces siempre saca el mismo resultado no se que podriamos hacer 
+            //A lo mejor con evaluate respeta el orden
+            const new_matriz = math.multiply(math.transpose(matriz), matriz)
+            if (index === 0) {
+                centro_convergencia = new_matriz
+            }
+            else {
+                centro_convergencia = math.add(centro_convergencia, new_matriz)
+            }
+        })
 
+        centro_convergencia = math.multiply(1/matrices.length, centro_convergencia)
+        centros_convergencias.push({[clasesKeys]: centro_convergencia})
+    }
 
-    //Sacar centros de convergencia con la informacion anterior
+    //Con los nuevos centros ver a que clase pertenece
+    let punto = '6.9,3.1,4.9,1.5,Iris-versicolor'.split(",")
+    punto = math.matrix(punto.slice(0, -1).map(number => parseFloat(number)))
+    let minimo_distancia = 10000000
+    let clase_pertenece;
+    for (const [clasesKeys, centro] of Object.entries(centros)) {
+        const resta = math.subtract(punto, centro)
+        const distancia = math.multiply(resta, math.transpose(resta))
+        clase_pertenece = distancia < minimo_distancia ? { [clasesKeys]: distancia } : clase_pertenece
+    }
 
-
-    //Con los nuevos centros de convergencia ver a que clase pertenece
+    console.log(`La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`)
 }
 
 
@@ -174,7 +212,7 @@ function lloyd(data) {
             centros[indice_elegido] = centro_elegido
         }
 
-        //Si los centros cumplen el criterio de convergencia un pedazo de break
+        //Si los centros cumplen el criterio de convergencia no seguimos
 
         centros.forEach((centro, index) => {
             const distancia = math.distance(centro, centros_anteriores[index])
