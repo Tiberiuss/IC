@@ -102,7 +102,8 @@ let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 5.7,2.8,4.1,1.3,Iris-versicolor`;
 cleanData(rawData);
 bayes(rawData)
-// lloyd(rawData)
+//k_medias(rawData)
+//lloyd(rawData)
 
 function cleanData(data) {
     rawData = data.split("\n").map((row) => row.split(","));
@@ -121,9 +122,10 @@ function bayes(data) {
             muestras = { ...muestras, [clase]: [muestraM] }
         }
     })
+    console.log(muestras);
 
     let centros = {}
-    //Calcular centros
+    //Calcular centros/medias
     for (const [clasesKeys, matrices] of Object.entries(muestras)) {
         let centro;
         matrices.forEach((matriz, index) => {
@@ -145,7 +147,9 @@ function bayes(data) {
         matrices.forEach((matriz, index) => {
             //TODO no le importa el orden de los multiplos, entonces siempre saca el mismo resultado no se que podriamos hacer 
             //A lo mejor con evaluate respeta el orden
-            const new_matriz = math.multiply(math.transpose(matriz), matriz)
+            //let new_matriz = math.subtract(matriz,centro) falta la resta
+            new_matriz = math.multiply(math.transpose(matriz), matriz)
+            console.log([math.transpose(matriz)], [matriz]);
             if (index === 0) {
                 centro_convergencia = new_matriz
             }
@@ -154,8 +158,8 @@ function bayes(data) {
             }
         })
 
-        centro_convergencia = math.multiply(1/matrices.length, centro_convergencia)
-        centros_convergencias.push({[clasesKeys]: centro_convergencia})
+        centro_convergencia = math.multiply(1 / matrices.length, centro_convergencia)
+        centros_convergencias.push({ [clasesKeys]: centro_convergencia })
     }
 
     //Con los nuevos centros ver a que clase pertenece
@@ -178,6 +182,31 @@ function bayes(data) {
 function k_medias(data) {
     const tolerancia_e = 0.01;
     const peso_b = 2;
+    const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
+    const centros_anteriores = centros.map(centro => centro)
+    const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseFloat(number))))
+    let grados_pertenencias = []
+    for (const muestra of muestras) {
+        let distancia_acumulada = 0
+        let distancia_punto = 0
+        for (const centro of centros) {
+            distancia_punto = 1 / Math.pow(math.distance(muestra, centro), 2);
+            distancia_acumulada += Math.pow(distancia_punto, 1 / (peso_b - 1));
+        }
+        const grado_pertenencia = Math.pow(distancia_punto, 1 / (peso_b - 1));
+        grado_pertenencia.push(grado_pertenencia)
+
+    }
+
+    //Sacar los nuevos centros
+
+
+    //Sacar las distancias a todos los puntos desde los centros con los dos, distancias al cuadrado
+
+    //Sacamos grado de pertenicente que se utiliza para cada muestra
+
+    //Recalculamos centros
+
 
 }
 
@@ -190,7 +219,7 @@ function lloyd(data) {
 
 
     const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
-    const centros_anteriores = [centros[0], centros[1]];
+    const centros_anteriores = [...centros];
 
     let i = 0
     let seguir = true
@@ -213,12 +242,18 @@ function lloyd(data) {
         }
 
         //Si los centros cumplen el criterio de convergencia no seguimos
+        indice = 0
+        seguir = false
+        for (const centro of centros) {
+            const distancia = math.distance(centro, centros_anteriores[indice])
+            centros_anteriores[indice] = centro
+            if (distancia >= tolerancia_e) {
+                seguir = true
+                break
+            }
+            indice++
 
-        centros.forEach((centro, index) => {
-            const distancia = math.distance(centro, centros_anteriores[index])
-            seguir = distancia < tolerancia_e ? false : true
-            centros_anteriores[index] = centro
-        })
+        }
         i++
 
 
