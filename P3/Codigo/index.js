@@ -114,7 +114,7 @@ function bayes(data) {
     let muestras = {}
     data.forEach(muestra => {
         const clase = muestra.slice(-1)[0]
-        const muestraM = math.matrix(muestra.slice(0, -1).map(number => parseFloat(number)))
+        const muestraM = math.matrix([muestra.slice(0, -1).map(number => parseFloat(number))])
         if (clase in muestras) {
             muestras[clase].push(muestraM)
         }
@@ -149,7 +149,7 @@ function bayes(data) {
             //A lo mejor con evaluate respeta el orden
             //let new_matriz = math.subtract(matriz,centro) falta la resta
             new_matriz = math.multiply(math.transpose(matriz), matriz)
-            console.log([math.transpose(matriz)], [matriz]);
+            //console.log([math.transpose(matriz)], [matriz]);
             if (index === 0) {
                 centro_convergencia = new_matriz
             }
@@ -170,7 +170,7 @@ function bayes(data) {
     for (const [clasesKeys, centro] of Object.entries(centros)) {
         const resta = math.subtract(punto, centro)
         const distancia = math.multiply(resta, math.transpose(resta))
-        clase_pertenece = distancia < minimo_distancia ? { [clasesKeys]: distancia } : clase_pertenece
+        clase_pertenece = math.squeeze(distancia) < minimo_distancia ? { [clasesKeys]: distancia } : clase_pertenece
     }
 
     console.log(`La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`)
