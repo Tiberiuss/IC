@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="math.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
+    <input type="file" class="input-file" id="file" />
+    <p>Introduzca el algoritmo que quiere probar</p>
+    <select id="algorithm">
+        <option value="0">K-medias</option>
+        <option value="1">Bayes</option>
+        <option value="2">Lloyd</option>
+    </select>
+    <button class="btn" id="start">START</button>
+    <div id="content" class="d-none">
+        <div id="results"></div>
+        <h1>Prueba de muestras</h1>
+        <p>Introduzca una muestra para saber a que clase pertenece</p>
+        <input type="file" class="input-file" id="tests" />
+        <button class="btn" id="test-start">PROBAR PRUEBAS</button>
+    </div>
     <script type="text/javascript" src="index.js"></script>
 </body>
+
 
 </html>

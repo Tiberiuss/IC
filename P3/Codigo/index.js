@@ -1,5 +1,11 @@
-
-
+const file = document.getElementById("file");
+const testsFile = document.getElementById("tests");
+const button = document.getElementById("start");
+const testsButton = document.getElementById("test-start");
+const algorithms = document.getElementById("algorithm");
+const content = document.getElementById("content");
+const resultados = document.getElementById("results");
+let testData = '5.1,3.5,1.4,0.2,Iris-setosa'
 let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 4.9,3.0,1.4,0.2,Iris-setosa
 4.7,3.2,1.3,0.2,Iris-setosa
@@ -101,13 +107,62 @@ let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 5.1,2.5,3.0,1.1,Iris-versicolor
 5.7,2.8,4.1,1.3,Iris-versicolor`;
 cleanData(rawData);
-bayes(rawData)
+cleanTestData(testData);
+//bayes(rawData)
 //k_medias(rawData)
 //lloyd(rawData)
+
+button.addEventListener("click", start);
+testsButton.addEventListener("click", start);
+file.addEventListener("change", (e) => {
+    //TODO cambiar el div de resultados a d-none??
+    resultados.parentNode.removeChild(resultados)
+    const fileData = e.target.files[0];
+    if (fileData.name !== "") {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            cleanData(evt.target.result);
+        };
+
+        reader.readAsText(fileData);
+    }
+});
+
+testsFile.addEventListener("change", (e) => {
+    const fileData = e.target.files[0];
+    if (fileData.name !== "") {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            cleanTestData(evt.target.result);
+        };
+
+        reader.readAsText(fileData);
+    }
+});
 
 function cleanData(data) {
     rawData = data.split("\n").map((row) => row.split(","));
     header = rawData.shift();
+}
+
+function cleanTestData(data) {
+    punto = data.split(",")
+    punto = math.matrix(punto.slice(0, -1).map(number => parseFloat(number)))
+}
+
+function start() {
+    const selectedAlgorithm = algorithms.value
+    if (selectedAlgorithm === "0") {
+        k_medias(rawData)
+    }
+    else if (selectedAlgorithm === "1") {
+        bayes(rawData)
+    }
+    else {
+        lloyd(rawData)
+    }
+    content.classList.add("d-block")
+
 }
 
 function bayes(data) {
@@ -145,11 +200,8 @@ function bayes(data) {
     for (const [clasesKeys, matrices] of Object.entries(muestras)) {
         let centro_convergencia;
         matrices.forEach((matriz, index) => {
-            //TODO no le importa el orden de los multiplos, entonces siempre saca el mismo resultado no se que podriamos hacer 
-            //A lo mejor con evaluate respeta el orden
-            //let new_matriz = math.subtract(matriz,centro) falta la resta
+            let new_matriz = math.subtract(matriz, centros[clasesKeys])
             new_matriz = math.multiply(math.transpose(matriz), matriz)
-            //console.log([math.transpose(matriz)], [matriz]);
             if (index === 0) {
                 centro_convergencia = new_matriz
             }
@@ -160,11 +212,19 @@ function bayes(data) {
 
         centro_convergencia = math.multiply(1 / matrices.length, centro_convergencia)
         centros_convergencias.push({ [clasesKeys]: centro_convergencia })
+        
+        const matriz_covarianza = document.createElement('div')
+        matriz_covarianza.innerHTML = `
+        <h5>Matriz de covarianza de ${clasesKeys}</h5>
+        <p>${centro_convergencia}</p>`
+        resultados.appendChild(matriz_covarianza)
     }
 
+
+
+
     //Con los nuevos centros ver a que clase pertenece
-    let punto = '6.9,3.1,4.9,1.5,Iris-versicolor'.split(",")
-    punto = math.matrix(punto.slice(0, -1).map(number => parseFloat(number)))
+    //TODO añadir el centro de convergencia a la formula
     let minimo_distancia = 10000000
     let clase_pertenece;
     for (const [clasesKeys, centro] of Object.entries(centros)) {
@@ -173,7 +233,9 @@ function bayes(data) {
         clase_pertenece = math.squeeze(distancia) < minimo_distancia ? { [clasesKeys]: distancia } : clase_pertenece
     }
 
-    console.log(`La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`)
+    const text = document.createElement("p")
+    text.innerText = `La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`
+    resultados.appendChild(text)
 }
 
 
@@ -183,29 +245,103 @@ function k_medias(data) {
     const tolerancia_e = 0.01;
     const peso_b = 2;
     const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
-    const centros_anteriores = centros.map(centro => centro)
+    const centros_anteriores = [...centros]
     const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseFloat(number))))
-    let grados_pertenencias = []
-    for (const muestra of muestras) {
-        let distancia_acumulada = 0
-        let distancia_punto = 0
-        for (const centro of centros) {
-            distancia_punto = 1 / Math.pow(math.distance(muestra, centro), 2);
-            distancia_acumulada += Math.pow(distancia_punto, 1 / (peso_b - 1));
+    seguir = true
+    let iteraciones = 1
+    while (seguir) {
+        let grados_pertenencias = []
+        //TODO hacemos el caso que b pueda ser 1, o sudamos
+        for (const muestra of muestras) {
+            let distancia_acumulada = 0
+            let distancia_punto = 0
+            //Sacar las distancias a todos los puntos desde los centros con los dos, distancias al cuadrado
+            for (const centro of centros) {
+                distancia_punto = 1 / Math.pow(math.distance(muestra, centro), 2);
+                distancia_acumulada += Math.pow(distancia_punto, 1 / (peso_b - 1));
+            }
+            let index = 0
+            let peso_pertenencia = {}
+            //Sacamos grado de perteniencia que se utiliza para cada muestra
+            for (const centro of centros) {
+                distancia_punto = 1 / Math.pow(math.distance(muestra, centro), 2);
+                let grado_pertenencia = Math.pow(distancia_punto, 1 / (peso_b - 1)) / distancia_acumulada;
+                peso_pertenencia = { ...peso_pertenencia, [index]: grado_pertenencia }
+                index++
+            }
+            grados_pertenencias.push(peso_pertenencia)
+
         }
-        const grado_pertenencia = Math.pow(distancia_punto, 1 / (peso_b - 1));
-        grado_pertenencia.push(grado_pertenencia)
+        // console.log(grados_pertenencias);
+
+        //Sacar los nuevos centros
+        let index_centros = 0
+        while (index_centros < centros.length) {
+            let index_muestras = 0
+            let num_centro;
+            let den_centro;
+            for (const muestra of muestras) {
+                const muestra_actual = math.multiply(muestra, Math.pow(grados_pertenencias[index_muestras][index_centros], peso_b))
+                if (index_muestras === 0) {
+                    num_centro = muestra_actual
+                    den_centro = Math.pow(grados_pertenencias[index_muestras][index_centros], peso_b)
+                }
+                else {
+                    num_centro = math.add(num_centro, muestra_actual)
+                    den_centro += Math.pow(grados_pertenencias[index_muestras][index_centros], peso_b)
+                }
+                index_muestras++
+            }
+            const nuevoCentro = math.divide(num_centro, den_centro)
+            centros[index_centros] = nuevoCentro
+            index_centros++
+        }
+        // console.log(centros);
+
+        const iteracion = document.createElement('div')
+        iteracion.innerHTML = `<h3>Iteracion ${iteraciones}</h3>
+
+        <h6>Centro Iris-setosa</h6>
+        <p>Centro anterior(Vt-1): ${centros_anteriores[0]}</p>
+        <p>Nuevo centro(Vt): ${centros[0]}</p>
+
+        <h6>Centro Iris-versicola</h6>
+        <p>Centro anterior(Vt-1): ${centros_anteriores[1]}</p>
+        <p>Nuevo centro(Vt): ${centros[1]}</p>
+        `
+        resultados.appendChild(iteracion)
+
+        //Comprobamos si iteramos otra vez
+        indice = 0
+        seguir = false
+        for (const centro of centros) {
+            const distancia = math.distance(centro, centros_anteriores[indice])
+            centros_anteriores[indice] = centro
+            if (distancia >= tolerancia_e) {
+                seguir = true
+                iteraciones++
+                break
+            }
+            indice++
+
+        }
 
     }
 
-    //Sacar los nuevos centros
+    //Enseñar los puntos dados en testIris a que centro esta mas cercano
+    let indice_pertenece;
+    let minimo_distancia = 10000000
+    centros.forEach((centro, index) => {
+        const distancia = math.distance(punto, centro)
+        if (distancia < minimo_distancia) {
+            indice_pertenece = index
+            minimo_distancia = distancia
+        }
+    })
+    const text = document.createElement("p")
+    text.innerText = `La muestra ${punto} pertenece a la clase ${indice_pertenece}`
+    resultados.appendChild(text)
 
-
-    //Sacar las distancias a todos los puntos desde los centros con los dos, distancias al cuadrado
-
-    //Sacamos grado de pertenicente que se utiliza para cada muestra
-
-    //Recalculamos centros
 
 
 }
@@ -216,14 +352,14 @@ function lloyd(data) {
     const lambda = 0.1
 
     const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseFloat(number))))
-
+    const nombre_clases = ["Iris-setosa", "Iris-versicolor"]
 
     const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
     const centros_anteriores = [...centros];
 
-    let i = 0
+    let iteraciones = 0
     let seguir = true
-    while (i < k_max && seguir) {
+    while (iteraciones < k_max && seguir) {
         let indice_elegido;
         //Calcular que centro cambiar para cada muestra
         for (const muestra of muestras) {
@@ -241,6 +377,19 @@ function lloyd(data) {
             centros[indice_elegido] = centro_elegido
         }
 
+        const iteracion = document.createElement('div')
+        iteracion.innerHTML = `<h3>Iteracion ${iteraciones}</h3>
+
+        <h6>Centro Iris-setosa</h6>
+        <p>Centro anterior(Vt-1): ${centros_anteriores[0]}</p>
+        <p>Nuevo centro(Vt): ${centros[0]}</p>
+
+        <h6>Centro Iris-versicola</h6>
+        <p>Centro anterior(Vt-1): ${centros_anteriores[1]}</p>
+        <p>Nuevo centro(Vt): ${centros[1]}</p>
+        `
+        resultados.appendChild(iteracion)
+
         //Si los centros cumplen el criterio de convergencia no seguimos
         indice = 0
         seguir = false
@@ -249,12 +398,12 @@ function lloyd(data) {
             centros_anteriores[indice] = centro
             if (distancia >= tolerancia_e) {
                 seguir = true
+                iteraciones++
                 break
             }
             indice++
 
         }
-        i++
 
 
     }
@@ -267,8 +416,6 @@ function lloyd(data) {
 
 
     //Enseñar los puntos dados en testIris a que centro esta mas cercano
-    let punto = '5.1,3.5,1.4,0.2,Iris-setosa'.split(",")
-    punto = math.matrix(punto.slice(0, -1).map(number => parseFloat(number)))
     let indice_pertenece;
     let minimo_distancia = 10000000
     centros.forEach((centro, index) => {
@@ -278,5 +425,12 @@ function lloyd(data) {
             minimo_distancia = distancia
         }
     })
-    console.log(`La muestra ${punto} pertenece al centro ${indice_pertenece}`)
+    const text = document.createElement("p")
+    text.innerText = `La muestra ${punto} esta más cercano al centro de ${nombre_clases[indice_pertenece]} con una distancia de ${minimo_distancia}`
+    resultados.appendChild(text)
+
+}
+
+function pintar(info) {
+
 }
