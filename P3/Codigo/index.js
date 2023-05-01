@@ -116,7 +116,6 @@ button.addEventListener("click", start);
 testsButton.addEventListener("click", start);
 file.addEventListener("change", (e) => {
     //TODO cambiar el div de resultados a d-none??
-    resultados.parentNode.removeChild(resultados)
     const fileData = e.target.files[0];
     if (fileData.name !== "") {
         const reader = new FileReader();
@@ -152,6 +151,7 @@ function cleanTestData(data) {
 
 function start() {
     const selectedAlgorithm = algorithms.value
+    resultados.innerHTML = ""
     if (selectedAlgorithm === "0") {
         k_medias(rawData)
     }
@@ -196,12 +196,12 @@ function bayes(data) {
     }
 
     //Calcular para cada muestra su centro de convergencia
-    const centros_convergencias = []
+    let centros_convergencias = []
     for (const [clasesKeys, matrices] of Object.entries(muestras)) {
         let centro_convergencia;
         matrices.forEach((matriz, index) => {
             let new_matriz = math.subtract(matriz, centros[clasesKeys])
-            new_matriz = math.multiply(math.transpose(matriz), matriz)
+            new_matriz = math.multiply(math.transpose(new_matriz), new_matriz)
             if (index === 0) {
                 centro_convergencia = new_matriz
             }
@@ -211,8 +211,8 @@ function bayes(data) {
         })
 
         centro_convergencia = math.multiply(1 / matrices.length, centro_convergencia)
-        centros_convergencias.push({ [clasesKeys]: centro_convergencia })
-        
+        centros_convergencias = {...centros_convergencias, [clasesKeys]: centro_convergencia }
+
         const matriz_covarianza = document.createElement('div')
         matriz_covarianza.innerHTML = `
         <h5>Matriz de covarianza de ${clasesKeys}</h5>
@@ -224,13 +224,17 @@ function bayes(data) {
 
 
     //Con los nuevos centros ver a que clase pertenece
-    //TODO añadir el centro de convergencia a la formula
     let minimo_distancia = 10000000
     let clase_pertenece;
     for (const [clasesKeys, centro] of Object.entries(centros)) {
-        const resta = math.subtract(punto, centro)
+        let resta = math.subtract(punto, centro)
+        resta = math.multiply(resta, math.inv(centros_convergencias[clasesKeys]))
         const distancia = math.multiply(resta, math.transpose(resta))
-        clase_pertenece = math.squeeze(distancia) < minimo_distancia ? { [clasesKeys]: distancia } : clase_pertenece
+        if (math.squeeze(distancia) < minimo_distancia) {
+            clase_pertenece = { [clasesKeys]: math.squeeze(distancia) }
+            minimo_distancia = math.squeeze(distancia)
+
+        }
     }
 
     const text = document.createElement("p")
@@ -251,7 +255,6 @@ function k_medias(data) {
     let iteraciones = 1
     while (seguir) {
         let grados_pertenencias = []
-        //TODO hacemos el caso que b pueda ser 1, o sudamos
         for (const muestra of muestras) {
             let distancia_acumulada = 0
             let distancia_punto = 0
