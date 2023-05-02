@@ -1,4 +1,4 @@
-# Ingenieria del Conocimiento
+# Ingeniería del Conocimiento
 
 Implementación de varios algoritmos para la asignatura Ingeniería del Conocimiento de 4º año del Grado en Ingeniería del Software.
 [Github Pages](https://tiberiuss.github.io/IC/)
