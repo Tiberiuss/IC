@@ -5,7 +5,9 @@ const testsButton = document.getElementById("test-start");
 const algorithms = document.getElementById("algorithm");
 const content = document.getElementById("content");
 const resultados = document.getElementById("results");
-let testData = '5.1,3.5,1.4,0.2,Iris-setosa'
+const testText = document.getElementById("text-test");
+let testData;
+let punto;
 let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 4.9,3.0,1.4,0.2,Iris-setosa
 4.7,3.2,1.3,0.2,Iris-setosa
@@ -107,7 +109,7 @@ let rawData = `5.1,3.5,1.4,0.2,Iris-setosa
 5.1,2.5,3.0,1.1,Iris-versicolor
 5.7,2.8,4.1,1.3,Iris-versicolor`;
 cleanData(rawData);
-cleanTestData(testData);
+// cleanTestData(testData);
 //bayes(rawData)
 //k_medias(rawData)
 //lloyd(rawData)
@@ -162,7 +164,7 @@ function start() {
         lloyd(rawData)
     }
     content.classList.add("d-block")
-
+    resultados.scrollTo(0, resultados.scrollHeight);
 }
 
 function bayes(data) {
@@ -177,7 +179,6 @@ function bayes(data) {
             muestras = { ...muestras, [clase]: [muestraM] }
         }
     })
-    console.log(muestras);
 
     let centros = {}
     //Calcular centros/medias
@@ -196,50 +197,66 @@ function bayes(data) {
     }
 
     //Calcular para cada muestra su centro de convergencia
-    let centros_convergencias = []
+    let matrices_covarianza = []
     for (const [clasesKeys, matrices] of Object.entries(muestras)) {
-        let centro_convergencia;
+        let matriz_covarianza;
         matrices.forEach((matriz, index) => {
             let new_matriz = math.subtract(matriz, centros[clasesKeys])
             new_matriz = math.multiply(math.transpose(new_matriz), new_matriz)
             if (index === 0) {
-                centro_convergencia = new_matriz
+                matriz_covarianza = new_matriz
             }
             else {
-                centro_convergencia = math.add(centro_convergencia, new_matriz)
+                matriz_covarianza = math.add(matriz_covarianza, new_matriz)
             }
         })
 
-        centro_convergencia = math.multiply(1 / matrices.length, centro_convergencia)
-        centros_convergencias = {...centros_convergencias, [clasesKeys]: centro_convergencia }
+        matriz_covarianza = math.multiply(1 / matrices.length, matriz_covarianza)
+        matrices_covarianza = { ...matrices_covarianza, [clasesKeys]: matriz_covarianza }
 
-        const matriz_covarianza = document.createElement('div')
-        matriz_covarianza.innerHTML = `
-        <h5>Matriz de covarianza de ${clasesKeys}</h5>
-        <p>${centro_convergencia}</p>`
-        resultados.appendChild(matriz_covarianza)
+        const table_matriz_covarianza = document.createElement('div')
+        table_matriz_covarianza.innerHTML = `<h5>Matriz de covarianza de ${clasesKeys}</h5>`
+        let table = "<table>"
+        let actualRow = -1;
+
+        matriz_covarianza.forEach((el,[row,col]) => {
+            if (row !== actualRow) {
+                actualRow = row;
+                table+="<tr>";
+            }
+
+            table += "<td>" + el + "</td>"
+
+            if (row !== actualRow) {
+                actualRow = row;
+                table+="</tr>";
+            }
+        })
+        table += "</table>"
+        table_matriz_covarianza.innerHTML += table;
+        resultados.appendChild(table_matriz_covarianza)
     }
 
 
 
+    if (punto) {
+        //Con los nuevos centros ver a que clase pertenece
+        let minimo_distancia = 10000000
+        let clase_pertenece;
+        for (const [clasesKeys, centro] of Object.entries(centros)) {
+            let resta = math.subtract(punto, centro)
+            resta = math.multiply(resta, math.inv(matrices_covarianza[clasesKeys]))
+            const distancia = math.multiply(resta, math.transpose(resta))
+            console.log(distancia)
+            if (math.squeeze(distancia) < minimo_distancia) {
+                clase_pertenece = { [clasesKeys]: math.squeeze(distancia) }
+                minimo_distancia = math.squeeze(distancia)
 
-    //Con los nuevos centros ver a que clase pertenece
-    let minimo_distancia = 10000000
-    let clase_pertenece;
-    for (const [clasesKeys, centro] of Object.entries(centros)) {
-        let resta = math.subtract(punto, centro)
-        resta = math.multiply(resta, math.inv(centros_convergencias[clasesKeys]))
-        const distancia = math.multiply(resta, math.transpose(resta))
-        if (math.squeeze(distancia) < minimo_distancia) {
-            clase_pertenece = { [clasesKeys]: math.squeeze(distancia) }
-            minimo_distancia = math.squeeze(distancia)
-
+            }
         }
-    }
 
-    const text = document.createElement("p")
-    text.innerText = `La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`
-    resultados.appendChild(text)
+        testText.innerText = `La muestra ${punto} pertenece al centro ${Object.keys(clase_pertenece)}`
+    }
 }
 
 
@@ -251,6 +268,7 @@ function k_medias(data) {
     const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
     const centros_anteriores = [...centros]
     const muestras = data.map(muestra => math.matrix(muestra.slice(0, -1).map(number => parseFloat(number))))
+    const nombre_clases = ["Iris-setosa", "Iris-versicolor"]
     seguir = true
     let iteraciones = 1
     while (seguir) {
@@ -301,18 +319,8 @@ function k_medias(data) {
         }
         // console.log(centros);
 
-        const iteracion = document.createElement('div')
-        iteracion.innerHTML = `<h3>Iteracion ${iteraciones}</h3>
+        pintarlloydKmedias(iteraciones, centros, centros_anteriores)
 
-        <h6>Centro Iris-setosa</h6>
-        <p>Centro anterior(Vt-1): ${centros_anteriores[0]}</p>
-        <p>Nuevo centro(Vt): ${centros[0]}</p>
-
-        <h6>Centro Iris-versicola</h6>
-        <p>Centro anterior(Vt-1): ${centros_anteriores[1]}</p>
-        <p>Nuevo centro(Vt): ${centros[1]}</p>
-        `
-        resultados.appendChild(iteracion)
 
         //Comprobamos si iteramos otra vez
         indice = 0
@@ -331,19 +339,22 @@ function k_medias(data) {
 
     }
 
-    //Enseñar los puntos dados en testIris a que centro esta mas cercano
-    let indice_pertenece;
-    let minimo_distancia = 10000000
-    centros.forEach((centro, index) => {
-        const distancia = math.distance(punto, centro)
-        if (distancia < minimo_distancia) {
-            indice_pertenece = index
-            minimo_distancia = distancia
-        }
-    })
-    const text = document.createElement("p")
-    text.innerText = `La muestra ${punto} pertenece a la clase ${indice_pertenece}`
-    resultados.appendChild(text)
+    if (punto) {
+        //Enseñar los puntos dados en testIris a que centro esta mas cercano
+        let indice_pertenece;
+        let minimo_distancia = 10000000
+        centros.forEach((centro, index) => {
+            const distancia = math.distance(punto, centro)
+            if (distancia < minimo_distancia) {
+                indice_pertenece = index
+                minimo_distancia = distancia
+            }
+        })
+
+        testText.innerText = `La muestra ${punto} pertenece a la clase ${nombre_clases[indice_pertenece]} con una distancia de ${minimo_distancia}`
+
+    }
+
 
 
 
@@ -360,7 +371,7 @@ function lloyd(data) {
     const centros = [math.matrix([4.6, 3.0, 4.0, 0.0]), math.matrix([6.8, 3.4, 4.6, 0.7])];
     const centros_anteriores = [...centros];
 
-    let iteraciones = 0
+    let iteraciones = 1
     let seguir = true
     while (iteraciones < k_max && seguir) {
         let indice_elegido;
@@ -380,18 +391,7 @@ function lloyd(data) {
             centros[indice_elegido] = centro_elegido
         }
 
-        const iteracion = document.createElement('div')
-        iteracion.innerHTML = `<h3>Iteracion ${iteraciones}</h3>
-
-        <h6>Centro Iris-setosa</h6>
-        <p>Centro anterior(Vt-1): ${centros_anteriores[0]}</p>
-        <p>Nuevo centro(Vt): ${centros[0]}</p>
-
-        <h6>Centro Iris-versicola</h6>
-        <p>Centro anterior(Vt-1): ${centros_anteriores[1]}</p>
-        <p>Nuevo centro(Vt): ${centros[1]}</p>
-        `
-        resultados.appendChild(iteracion)
+        pintarlloydKmedias(iteraciones, centros, centros_anteriores)
 
         //Si los centros cumplen el criterio de convergencia no seguimos
         indice = 0
@@ -417,23 +417,37 @@ function lloyd(data) {
         console.log(`El centro ${index} esta en ${centro}`);
     })
 
+    if (punto) {
+        //Enseñar los puntos dados en testIris a que centro esta mas cercano
+        let indice_pertenece;
+        let minimo_distancia = 10000000
+        centros.forEach((centro, index) => {
+            const distancia = math.distance(punto, centro)
+            if (distancia < minimo_distancia) {
+                indice_pertenece = index
+                minimo_distancia = distancia
+            }
+        })
 
-    //Enseñar los puntos dados en testIris a que centro esta mas cercano
-    let indice_pertenece;
-    let minimo_distancia = 10000000
-    centros.forEach((centro, index) => {
-        const distancia = math.distance(punto, centro)
-        if (distancia < minimo_distancia) {
-            indice_pertenece = index
-            minimo_distancia = distancia
-        }
-    })
-    const text = document.createElement("p")
-    text.innerText = `La muestra ${punto} esta más cercano al centro de ${nombre_clases[indice_pertenece]} con una distancia de ${minimo_distancia}`
-    resultados.appendChild(text)
+        testText.innerText = `La muestra ${punto} esta más cercano al centro de ${nombre_clases[indice_pertenece]} con una distancia de ${minimo_distancia}`
+    }
+
+}
+
+function pintarlloydKmedias(iteraciones, centros, centros_anteriores) {
+
+    const iteracion = document.createElement('div')
+    iteracion.innerHTML = `<h3>Iteracion ${iteraciones}</h3>
+
+    <h5>Centro Iris-setosa</h5>
+    <p>Centro anterior(Vt-1): ${centros_anteriores[0]}</p>
+    <p>Nuevo centro(Vt): ${centros[0]}</p>
+
+    <h5>Centro Iris-versicola</h5>
+    <p>Centro anterior(Vt-1): ${centros_anteriores[1]}</p>
+    <p>Nuevo centro(Vt): ${centros[1]}</p>
+    `
+    resultados.appendChild(iteracion)
 
 }
 
-function pintar(info) {
-
-}
